@@ -441,3 +441,16 @@ function _M:saveGame()
   savefile_pipe:push(self.save_name, "game", self)
   self.log("Saving game...")
 end
+
+function _M:addPortal(zone, level, name)
+    local m = zone:makeEntityByName(level, "terrain", name)
+    if m then
+      local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
+      local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+      if not tx then return end
+      game.zone:addEntity(level, m, "terrain", tx, ty)
+      if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
+        game.log("You see a flash, and another shimmering portal appears.")
+      end
+    end
+end

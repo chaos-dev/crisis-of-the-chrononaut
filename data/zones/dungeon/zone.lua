@@ -44,36 +44,26 @@ return {
   },
   levels =
   {
+    [1] = {
+      generator = { map = {
+        up = "PORTAL",
+      }, },
+
+    },
+    [3] = {
+      generator =  { map = {
+        force_last_stair = true,
+        down = "UP_UPPERMINES",
+      }, },
+    },
   },
   post_process = function(level)
     level.turn_counter = 0
   end,
 
   on_turn = function(self)
-    if not game.level.turn_counter then return end
-    --paranoia alert
-    if game.level.turn_counter < 0 then game.level.turn_counter = 0 end
-
-    game.level.turn_counter = game.level.turn_counter + 1
-
-    --Every 5 player turns
-    if game.level.turn_counter % 50 == 0 then
-      --generate an opponent
-      local m = game.zone:makeEntity(game.level, "actor", f, nil, true)
-      if m then
-        local x, y = rng.range(0, game.level.map.w-1), rng.range(0, game.level.map.h-1)
-        local tries = 0
-        while not m:canMove(x,y) and tries < 100 do
-          x, y = rng.range(0, game.level.map.w-1), rng.range(0, game.level.map.h-1)
-          tries = tries + 1
-        end
-        if tries < 100 then
-          game.zone:addEntity(game.level, m, "actor", x, y)
-          game.log("Added an entity!")
-        else
-          game.log("Failed to add an entity!")
-        end
-      end
+    if game.turn % 100 == 0 then
+      game:addPortal(game.zone, game.level, "STARTINGROOM_PORTAL")
     end
   end,
 }

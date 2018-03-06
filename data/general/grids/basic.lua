@@ -28,13 +28,29 @@ newEntity{
 }
 
 newEntity{
-  define_as = "PORTAL",
+  define_as = "DUNGEON_PORTAL",
   name = "A strange, shimmering portal",
-  display = '<', color_r=255, color_g=0, color_b=255, back_color=colors.DARK_GREY,
+  display = 'O', color_r=255, color_g=0, color_b=255, back_color=colors.DARK_GREY,
   always_remember = true,
   notice = true,
-  change_level = 1,
-  change_zone = "dungeon",
+  on_move = function(self, x, y, who)
+    -- TODO: Allow portals to move other entities
+    if not who.player then return end
+    game:changeLevel(1, "dungeon", {direct_switch=true})
+  end
+}
+
+newEntity{
+  define_as = "STARTINGROOM_PORTAL",
+  name = "A strange, shimmering portal",
+  display = 'O', color_r=255, color_g=0, color_b=255, back_color=colors.DARK_GREY,
+  always_remember = true,
+  notice = true,
+  on_move = function(self, x, y, who)
+    -- TODO: Allow portals to move other entities
+    if not who.player then return end
+    game:changeLevel(1, "startingroom", {direct_switch=true})
+  end
 }
 
 newEntity{

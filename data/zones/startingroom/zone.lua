@@ -54,14 +54,8 @@ return {
     end
   end,
   on_turn = function(self)
-    if game.turn % 100 ~= 0 then return end
-    local m = game.zone:makeEntityByName(game.level, "terrain", "PORTAL")
-    if m then
-      local x, y = rng.range(0, game.level.map.w-1), rng.range(0, game.level.map.h-1)
-      local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
-      if not tx then return end
-      game.zone:addEntity(game.level, m, "terrain", tx, ty)
-      game.log("You see a flash, and a shimmering ring of light appears.")
+    if game.turn % 100 == 0 then
+      game:addPortal(game.zone, game.level, "DUNGEON_PORTAL")
     end
   end,
 }
