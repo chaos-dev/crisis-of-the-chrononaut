@@ -27,6 +27,7 @@ local ActorAI = require "engine.interface.ActorAI"
 local ActorLevel = require "engine.interface.ActorLevel"
 local ActorTemporaryEffects = require "engine.interface.ActorTemporaryEffects"
 local Birther = require "engine.Birther"
+local UIBase = require "engine.ui.Base"
 
 -- Useful keybinds
 KeyBind:load("move,hotkeys,inventory,actions,interface,debug")
@@ -53,5 +54,8 @@ ActorAI:loadDefinition("/engine/ai/")
 
 -- Birther descriptor
 Birther:loadDefinition("/data/birth/descriptors.lua")
+
+-- Gui Specification
+UIBase.ui = "simple"
 
 return {require "mod.class.Game" }

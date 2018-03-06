@@ -28,6 +28,16 @@ newEntity{
 }
 
 newEntity{
+  define_as = "PORTAL",
+  name = "A strange, shimmering portal",
+  display = '<', color_r=255, color_g=0, color_b=255, back_color=colors.DARK_GREY,
+  always_remember = true,
+  notice = true,
+  change_level = 1,
+  change_zone = "dungeon",
+}
+
+newEntity{
   define_as = "UP",
   name = "previous level",
   display = '<', color_r=255, color_g=255, color_b=0, back_color=colors.DARK_GREY,
