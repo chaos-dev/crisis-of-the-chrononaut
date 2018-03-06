@@ -69,7 +69,7 @@ function _M:run()
   self.logPlayer = function(e, style, ...) if e == self.player then self.log(style, ...) end end
   self.logNewest = function() return self.logdisplay:getNewestLine() end
 
-  self.log(self.flash.GOOD, "Welcome to #00FF00#the template module!")
+  self.log(self.flash.GOOD, "Welcome to Crisis of the Chrononaut!")
 
   -- Setup inputs
   self:setupCommands()
@@ -97,7 +97,7 @@ function _M:newGame()
 
   self.creating_player = true
   local birth = Birther.new(nil, self.player, {"base", "role" }, function()
-    self:changeLevel(1, "dungeon")
+    self:changeLevel(1, "startingroom")
     print("[PLAYER BIRTH] resolve...")
     self.player:resolve()
     self.player:resolve(nil, true)
@@ -175,6 +175,11 @@ function _M:changeLevel(lev, zone)
     self.player:move(self.level.default_down.x, self.level.default_down.y, true)
   end
   self.level:addEntity(self.player)
+
+  -- Allow custom dialogs/actions upon entering the area
+  if self.zone.on_enter then
+    self.zone.on_enter(lev, old_lev, zone)
+  end
 end
 
 function _M:getPlayer()
@@ -235,7 +240,6 @@ function _M:display(nb_keyframe)
   end
 
   -- We display the player's interface
-  self.flash:toScreen(nb_keyframe)
   self.logdisplay:toScreen()
   if self.show_npc_list then
     self.npcs_display:toScreen()

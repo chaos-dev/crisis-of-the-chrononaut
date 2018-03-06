@@ -24,9 +24,14 @@ author = { "Chaos-Dev", "" }
 homepage = ""
 version = {1,5,5}
 engine = {1,5,5,"te4"}
-description = [[
-This is *NOT* a game, just an example/template to make your own using the T-Engine4.
-]]
+description = [[ You're an apprentice to a genius inventor. Suddenly, the
+time machine he's working on goes beserk, then disappears. It seems the
+machine he was building is now tearing apart the fabric of time. Portals
+start appearing that connect to other times, including Cretaceous Period,
+Medieval times, and WWII. You can enter the different eras and explore,
+but hostiles from each of these periods can emerge to fight you as well.
+Your mission: enter the portals, find the missing time machine, and
+destroy it before shatters time itself. ]]
 starter = "mod.load"
 show_only_on_cheat = false -- Example modules are not shown to normal players
 background_name = { "DeathStarOrb", "ElectroMagneticPulse", "NewToy" }

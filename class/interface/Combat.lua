@@ -22,6 +22,7 @@ local DamageType = require "engine.DamageType"
 local Map = require "engine.Map"
 local Target = require "engine.Target"
 local Talents = require "engine.interface.ActorTalents"
+local Chat = require "engine.Chat"
 
 --- Interface to add ToME combat system
 module(..., package.seeall, class.make)
@@ -33,7 +34,13 @@ function _M:bumpInto(target)
   if reaction < 0 then
     return self:attackTarget(target)
   elseif reaction >= 0 then
-    if self.move_others then
+    if self.player and target.can_talk then
+      local chat = Chat.new(target.can_talk, target, self)
+      chat:invoke()
+    elseif target.player and self.can_talk then
+      local chat = Chat.new(self.can_talk, self, target)
+      chat:invoke()
+    elseif self.move_others then
       -- Displace
       game.level.map:remove(self.x, self.y, Map.ACTOR)
       game.level.map:remove(target.x, target.y, Map.ACTOR)
