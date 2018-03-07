@@ -27,9 +27,14 @@ newChat{
 newChat{
   id="finding",
   text = [["Erm... well, it's certainly not here... And it might be in some other time or place for that matter. If I had the time machine, we might be able to travel to another time...
+
 By jove, what is that strange light over there?!?"]],
   answers = {
-    {[["I'm not sure.  I'll go investigate."]]}
+    {[["I'm not sure.  I'll go investigate."]],
+     action = function(npc, player)
+       player:useEnergy(game.energy_to_act)
+     end
+   }
   }
 }
 

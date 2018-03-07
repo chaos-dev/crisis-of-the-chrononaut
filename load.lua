@@ -29,6 +29,8 @@ local ActorTemporaryEffects = require "engine.interface.ActorTemporaryEffects"
 local Birther = require "engine.Birther"
 local UIBase = require "engine.ui.Base"
 
+dofile('/data/colors.lua')
+
 -- Useful keybinds
 KeyBind:load("move,hotkeys,inventory,actions,interface,debug")
 
@@ -51,6 +53,9 @@ ActorStats:defineStat("Constitution",	"con", 10, 1, 100, "Constitution defines y
 
 -- Actor AIs
 ActorAI:loadDefinition("/engine/ai/")
+
+-- Factions
+dofile('/data/factions.lua')
 
 -- Birther descriptor
 Birther:loadDefinition("/data/birth/descriptors.lua")

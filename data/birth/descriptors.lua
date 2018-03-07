@@ -42,15 +42,3 @@ newBirthDescriptor{
     [ActorTalents.T_KICK]=1,
   },
 }
-
-newBirthDescriptor{
-  type = "role",
-  name = "Acid-maniac",
-  desc =
-  {
-    "Zshhhhhhhh!",
-  },
-  talents = {
-    [ActorTalents.T_ACID_SPRAY]=1,
-  },
-}

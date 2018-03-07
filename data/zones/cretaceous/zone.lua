@@ -18,48 +18,38 @@
 -- darkgod@te4.org
 
 return {
-  name = "Old ruins",
+  name = "Cretaceous Era",
   level_range = {1, 1},
   max_level = 10,
-  decay = {300, 800},
-  width = 50, height = 50,
+  width = 100, height = 100,
   persistent = "zone",
+  all_lited = true,
   generator =  {
     map = {
-      class = "engine.generator.map.Roomer",
-      nb_rooms = 10,
-      rooms = {"simple", "pilar"},
-      lite_room_chance = 100,
-      ['.'] = "FLOOR",
-      ['#'] = "WALL",
+      class = "engine.generator.map.Forest",
+      edge_entrances = {4, 6},
+      sqrt_percent = 50,
+      sqrt_percent2 = 50,
+      floor = "DINO_GROUND",
+      floor2 = "DINO_GRASS",
+      wall = "DINO_TREE",
       up = "UP",
       down = "DOWN",
       door = "DOOR",
+      do_ponds = {
+        nb = {3, 6},
+        size = {w=25, h=25},
+        pond = {{0.6, "DINO_TALLGRASS"}, {0.8, "DINO_TALLGRASS"}},
+      },
+      --add_road = true,
+      --road = "DEEP_WATER",
     },
     actor = {
       class = "engine.generator.actor.Random",
-      nb_npc = {20, 30},
-      --      guardian = "SHADE_OF_ANGMAR", -- The guardian is set in the static map
+      nb_npc = {10, 20},
     },
   },
-  levels =
-  {
-    [1] = {
-      generator = { map = {
-        up = "PORTAL",
-      }, },
-
-    },
-    [3] = {
-      generator =  { map = {
-        force_last_stair = true,
-        down = "UP_UPPERMINES",
-      }, },
-    },
-  },
-  post_process = function(level)
-    level.turn_counter = 0
-  end,
+  levels = { },
 
   on_turn = function(self)
     if game.turn % 100 == 0 then

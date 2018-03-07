@@ -54,8 +54,8 @@ return {
     end
   end,
   on_turn = function(self)
-    if game.turn % 100 == 0 then
-      game:addPortal(game.zone, game.level, "DUNGEON_PORTAL")
+    if game.turn % 100 == 10 then
+      game:addPortal(game.zone, game.level, "DINO_PORTAL")
     end
   end,
 }

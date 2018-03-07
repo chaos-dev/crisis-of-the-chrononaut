@@ -169,6 +169,7 @@ function _M:changeLevel(lev, zone)
   end
   self.zone:getLevel(self, lev, old_lev)
 
+  -- XXX: Change this to put the player in the right place
   if lev > old_lev then
     self.player:move(self.level.default_up.x, self.level.default_up.y, true)
   else
