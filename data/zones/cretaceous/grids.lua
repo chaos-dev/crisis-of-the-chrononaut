@@ -18,3 +18,49 @@
 -- darkgod@te4.org
 
 load("/data/general/grids/basic.lua")
+
+newEntity{
+  define_as = "DINO_TREE",
+  name = "large tree",
+  display = 'T',
+  color_r = 9, color_g = 47, color_b = 32, back_color=colors.DINO_DARKGREEN,
+  always_remember = true,
+  does_block_move = true,
+  can_pass = {pass_wall=1},
+  block_sight = true,
+  air_level = -20,
+  dig = "FLOOR",
+}
+
+newEntity{
+  define_as = "DINO_GRASS",
+  name = "grass",
+  display = ' ',
+  color_r = 9, color_g = 47, color_b = 32, back_color=colors.DINO_GREEN,
+  always_remember = true,
+  does_block_move = false,
+  can_pass = {pass_wall=1},
+  block_sight = false,
+  air_level = -20,
+  dig = "DINO_GROUND",
+}
+
+newEntity{
+  define_as = "DINO_TALLGRASS",
+  name = "tall grass",
+  display = 'v',
+  color_r = 9, color_g = 47, color_b = 32, back_color=colors.DINO_GREEN,
+  always_remember = true,
+  does_block_move = false,
+  can_pass = {pass_wall=1},
+  block_sight = true,
+  air_level = -20,
+  dig = "DINO_GROUND",
+}
+
+newEntity{
+  define_as = "DINO_GROUND",
+  name = "dirt",
+  display = ' ',
+  color_r=255, color_g=255, color_b=255, back_color=colors.DINO_BROWN,
+}

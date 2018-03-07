@@ -19,6 +19,8 @@
 
 return {
   name = "Cretaceous Era",
+  year = "150 Million Years Ago",
+  location = "Unknown",
   level_range = {1, 1},
   max_level = 10,
   width = 100, height = 100,
