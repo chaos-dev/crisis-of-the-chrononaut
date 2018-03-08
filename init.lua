@@ -32,4 +32,4 @@ destroy it before shatters time itself. ]]
 starter = "mod.load"
 no_get_name = true
 show_only_on_cheat = false -- Example modules are not shown to normal players
-background_name = { "ElectroMagneticPulse" }
+background_name = { "cotc" }

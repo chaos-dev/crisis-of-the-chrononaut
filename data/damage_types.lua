@@ -22,7 +22,7 @@ setDefaultProjector(function(src, x, y, type, dam)
   local target = game.level.map(x, y, Map.ACTOR)
   if target then
 
-    game.logSeen(target, nil, "%s hits %s for %s%0.2f %s damage#LAST#.", src.name:capitalize(), target.name, DamageType:get(type).text_color or "#aaaaaa#", dam, DamageType:get(type).name)
+    game.logSeen(target, "%s hits %s for %s%0.2f %s damage#LAST#.", src.name:capitalize(), target.name, DamageType:get(type).text_color or "#aaaaaa#", dam, DamageType:get(type).name)
     local sx, sy = game.level.map:getTileToScreen(x, y)
     if target:takeHit(dam, src) then
       if src == game.player or target == game.player then

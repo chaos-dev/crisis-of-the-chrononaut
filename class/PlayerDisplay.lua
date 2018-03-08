@@ -24,7 +24,6 @@ function _M:init(x, y, w, h, bgcolor, font, size)
   self.display_y = y
   self.w, self.h = w, h
   self.bgcolor = bgcolor
-  print("Font: ", font, size)
   self.font = core.display.newFont(font, size)
   self.fontbig = core.display.newFont(font, size * 2)
   self.mouse = Mouse.new()
@@ -139,16 +138,15 @@ function _M:display()
 
   h = h + self.font_h
 
-  local life = math.max(0, player.life)
-  -- Hack to prevent uninitialized value usage
-  if (self.first_appearance) then life = player.max_life end
   if player.life < player.max_life*0.3 then
+    local life = math.max(0, player.life)
     self:makeTextureBar("#FIREBRICK#Life:", nil, life, player.max_life, nil, x, h, 255, 255, 255, colors.FIREBRICK, colors.VERY_DARK_RED)
     h = h + self.font_h
   elseif player.life < player.max_life*0.5 then
-    self:makeTextureBar("#DARK_RED#Life:", nil, life, player.max_life, nil, x, h, 255, 255, 255, colors.DARK_RED, colors.VERY_DARK_RED)
+    self:makeTextureBar("#DARK_RED#Life:", nil, player.life, player.max_life, nil, x, h, 255, 255, 255, colors.DARK_RED, colors.VERY_DARK_RED)
     h = h + self.font_h
   else
+    local life = math.min(player.max_life, player.life)
     self:makeTextureBar("#CRIMSON#Life:", nil, life, player.max_life, nil, x, h, 255, 255, 255, colors.CRIMSON, colors.VERY_DARK_RED)
     h = h + self.font_h
   end
