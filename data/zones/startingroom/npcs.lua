@@ -1,5 +1,5 @@
--- Broken Bottle - 7DRL
--- Copyright (C) 2011 Darren Grey
+-- Crisis of the Chrononaut
+-- Copyright (C) 2018 Chaos-Dev
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by

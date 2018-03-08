@@ -1,5 +1,5 @@
--- ToME - Tales of Middle-Earth
--- Copyright (C) 2009 - 2017 Nicolas Casalini
+-- Crisis of the Chrononaut
+-- Copyright (C) 2018 Chaos-Dev
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -14,8 +14,8 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
--- Nicolas Casalini "DarkGod"
--- darkgod@te4.org
+
+
 
 require "engine.class"
 local Dialog = require "engine.ui.Dialog"
