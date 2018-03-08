@@ -23,7 +23,7 @@ return {
   location = "Unknown",
   level_range = {1, 1},
   max_level = 10,
-  width = 100, height = 100,
+  width = 200, height = 200,
   persistent = "zone",
   all_lited = true,
   generator =  {
@@ -39,7 +39,7 @@ return {
       down = "DOWN",
       door = "DOOR",
       do_ponds = {
-        nb = {3, 6},
+        nb = {9, 12},
         size = {w=25, h=25},
         pond = {{0.6, "DINO_TALLGRASS"}, {0.8, "DINO_TALLGRASS"}},
       },
@@ -48,14 +48,27 @@ return {
     },
     actor = {
       class = "engine.generator.actor.Random",
-      nb_npc = {10, 20},
+      nb_npc = {25, 35},
     },
   },
   levels = { },
 
   on_turn = function(self)
-    if game.turn % 100 == 0 then
-      game:addPortal(game.zone, game.level, "startingroom")
+    if not self.portal_count then self.portal_count = 0 end
+    if (game.turn % 10 == 1) then
+      local fill_ratio = 1/9
+      local map_area = self.width*self.height
+      local scaling = 0.5 + game.turn_counter / game.max_turns
+      local portals_per_turn = fill_ratio*map_area / game.max_turns * scaling
+      self.portal_count = self.portal_count + portals_per_turn
+    end
+    while self.portal_count > 1 do
+      if rng.percent(5) then
+        game:addPortal(game.zone, game.level, "startingroom")
+      else
+        game:addPortal(game.zone, game.level, "apocalypse")
+      end
+      self.portal_count = self.portal_count - 1
     end
   end,
 }

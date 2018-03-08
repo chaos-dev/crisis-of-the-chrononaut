@@ -51,6 +51,9 @@ function _M:init()
   -- Pause at birth
   self.paused = true
 
+  -- The max length of game
+  self.max_turns = 2000
+
   -- Same init as when loaded from a savefile
   self:loaded()
 end
@@ -169,7 +172,6 @@ function _M:changeLevel(lev, zone)
   end
   self.zone:getLevel(self, lev, old_lev)
 
-  -- XXX: Change this to put the player in the right place
   if lev > old_lev then
     self.player:move(self.level.default_up.x, self.level.default_up.y, true)
   else
@@ -180,9 +182,9 @@ function _M:changeLevel(lev, zone)
   -- Add any missing portals
   if self.portal_queue and self.portal_queue[self.zone.short_name] then
     for k, ID in pairs(self.portal_queue[self.zone.short_name]) do
-       local match_ID = self.portals[ID].match
-       local destination = self.portals[ID].zone
-       self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
+      local match_ID = self.portals[ID].match
+      local destination = self.portals[ID].zone
+      self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
     end
     self.portal_queue[self.zone.short_name] = nil
   end
@@ -212,18 +214,20 @@ function _M:teleportLevel(lev, zone, portal_ID)
   -- Add any missing portals
   if self.portal_queue and self.portal_queue[self.zone.short_name] then
     for k, ID in pairs(self.portal_queue[self.zone.short_name]) do
-       local match_ID = self.portals[ID].match
-       local destination = self.portals[ID].zone
-       self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
+      local match_ID = self.portals[ID].match
+      local destination = self.portals[ID].zone
+      self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
     end
     self.portal_queue[self.zone.short_name] = nil
   end
 
   -- Place the player on the matching portal
   local match_ID = game.portals[portal_ID].match
-  local tx, ty = game.portals[match_ID].x+1, game.portals[match_ID].y+1
+  local tx, ty = game.portals[match_ID].x, game.portals[match_ID].y
+  game.player.traveling = true
   self.player:move(tx, ty, true)
   self.level:addEntity(self.player)
+  game.player.traveling = false
 
   -- Allow custom dialogs/actions upon entering the area
   if self.zone.on_enter then
@@ -255,6 +259,12 @@ end
 
 --- Called every game turns
 function _M:onTurn()
+  -- Increment turn counter
+  if not self.turn_counter then self.turn_counter = 0 end
+  if game.turn % 10 == 0 then
+    self.turn_counter = self.turn_counter + 1
+  end
+
   --Actually do zone on turn stuff
   if self.zone then
     if self.zone.on_turn then self.zone:on_turn() end
@@ -511,57 +521,56 @@ to look up the x, y coordinates of the matching portal.
 ]]--
 
 function _M:addPortal(zone, level, short_name)
-    print("[PORTALS] Adding a portal to ", short_name)
-    local m = zone:makeEntityByName(level, "terrain", "PORTAL")
-    if m then
-      -- Give the portal its unique ID
-      m.ID = self:getUniqueID()
-      m.change_zone = short_name
+  print("[PORTALS] Adding a portal to ", short_name)
+  local m = zone:makeEntityByName(level, "terrain", "PORTAL")
+  if m then
+    -- Give the portal its unique ID
+    m.ID = self:getUniqueID()
+    m.change_zone = short_name
 
-      -- Find a place for the portal
-      local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
-      local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
-      if not tx then return end
+    -- Find a place for the portal
+    local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
+    local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+    if not tx then return end
 
-      -- Set up the portal properties in game
-      if not self.portals then self.portals = {} end
-      local match_ID = self:getUniqueID()
-      self.portals[m.ID] = {
-        match=match_ID, zone=zone.short_name, x=tx, y=ty}
-      if not self.portal_queue then self.portal_queue = {} end
-      if not self.portal_queue[short_name] then self.portal_queue[short_name] = {} end
-      table.insert(self.portal_queue[short_name], m.ID)
+    -- Set up the portal properties in game
+    if not self.portals then self.portals = {} end
+    local match_ID = self:getUniqueID()
+    self.portals[m.ID] = {match=match_ID, zone=zone.short_name, x=tx, y=ty}
+    if not self.portal_queue then self.portal_queue = {} end
+    if not self.portal_queue[short_name] then self.portal_queue[short_name] = {} end
+    table.insert(self.portal_queue[short_name], m.ID)
 
-      -- Add the portal to the map
-      game.zone:addEntity(level, m, "terrain", tx, ty)
-      if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
-        game.log("You see a flash, and another shimmering portal appears.")
-      end
+    -- Add the portal to the map
+    game.zone:addEntity(level, m, "terrain", tx, ty)
+    if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
+      game.log("You see a flash, and another shimmering portal appears.")
     end
+  end
 end
 
 function _M:addMatchingPortal(zone, level, name, ID, match_ID)
-   print("[PORTALS] Adding a matching portal to that leads to ", name)
-   print("          zone: ", zone)
-   print("          level: ", lev)
-    local m = zone:makeEntityByName(level, "terrain", "PORTAL")
-    if m then
-      -- Give the portal its unique ID
-      m.ID = ID
-      m.change_zone = name
+  print("[PORTALS] Adding a matching portal to that leads to ", name)
+  print("          zone: ", zone)
+  print("          level: ", lev)
+  local m = zone:makeEntityByName(level, "terrain", "PORTAL")
+  if m then
+    -- Give the portal its unique ID
+    m.ID = ID
+    m.change_zone = name
 
-      -- Find a place for the portal
-      local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
-      local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
-      if not tx then return end
+    -- Find a place for the portal
+    local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
+    local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+    if not tx then return end
 
-      -- Set up the portal properties in game
-      if not self.portals then self.portals = {} end
-      self.portals[m.ID] = {match=match_ID, zone=zone.short_zone, x=tx, y=ty}
+    -- Set up the portal properties in game
+    if not self.portals then self.portals = {} end
+    self.portals[m.ID] = {match=match_ID, zone=zone.short_zone, x=tx, y=ty}
 
-      -- Add the portal to the map
-      game.zone:addEntity(level, m, "terrain", tx, ty)
-    end
+    -- Add the portal to the map
+    game.zone:addEntity(level, m, "terrain", tx, ty)
+  end
 end
 
 function _M:getUniqueID()
@@ -572,4 +581,3 @@ function _M:getUniqueID()
   end
   return self.IDCount
 end
-
