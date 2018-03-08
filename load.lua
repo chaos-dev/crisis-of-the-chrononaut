@@ -28,6 +28,9 @@ local UIBase = require "engine.ui.Base"
 
 dofile('/data/colors.lua')
 
+-- Init settings
+dofile("/mod/settings.lua")
+
 -- Useful keybinds
 KeyBind:load("move,hotkeys,inventory,actions,interface,debug")
 

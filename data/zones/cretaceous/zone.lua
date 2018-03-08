@@ -23,7 +23,7 @@ return {
   location = "Unknown",
   level_range = {1, 1},
   max_level = 10,
-  width = 200, height = 200,
+  width = 100, height = 100,
   persistent = "zone",
   all_lited = true,
   generator =  {
@@ -39,7 +39,7 @@ return {
       down = "DOWN",
       door = "DOOR",
       do_ponds = {
-        nb = {9, 12},
+        nb = {4, 8},
         size = {w=25, h=25},
         pond = {{0.6, "DINO_TALLGRASS"}, {0.8, "DINO_TALLGRASS"}},
       },
@@ -48,7 +48,7 @@ return {
     },
     actor = {
       class = "engine.generator.actor.Random",
-      nb_npc = {25, 35},
+      nb_npc = {15, 20},
     },
   },
   levels = { },

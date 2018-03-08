@@ -13,9 +13,6 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
---
-
-
 
 require "engine.class"
 require "engine.GameTurnBased"
@@ -43,6 +40,7 @@ local Tooltip = require "engine.Tooltip"
 
 local QuitDialog = require "mod.dialogs.Quit"
 
+
 module(..., package.seeall, class.inherit(engine.GameTurnBased, engine.interface.GameTargeting))
 
 function _M:init()
@@ -59,20 +57,10 @@ function _M:init()
 end
 
 function _M:run()
-  self.flash = LogFlasher.new(0, 0, self.w, 20, nil, nil, nil, {255,255,255}, {0,0,0})
-  self.logdisplay = LogDisplay.new(0, self.h * 0.8, self.w * 0.5, self.h * 0.2, nil, nil, nil, {255,255,255}, {30,30,30})
-  self.hotkeys_display = HotkeysDisplay.new(nil, self.w * 0.5, self.h * 0.8, self.w * 0.5, self.h * 0.2, {30,30,0})
-  self.npcs_display = ActorsSeenDisplay.new(nil, self.w * 0.5, self.h * 0.8, self.w * 0.5, self.h * 0.2, {30,30,0})
-  self.tooltip = Tooltip.new(nil, nil, {255,255,255}, {30,30,30})
-  self.flyers = FlyingText.new()
-  self:setFlyingText(self.flyers)
+  self.uiset:activate()
 
-  self.log = function(style, ...) if type(style) == "number" then self.logdisplay(...) self.flash(style, ...) else self.logdisplay(style, ...) self.flash(self.flash.NEUTRAL, style, ...) end end
-  self.logSeen = function(e, style, ...) if e and self.level.map.seens(e.x, e.y) then self.log(style, ...) end end
-  self.logPlayer = function(e, style, ...) if e == self.player then self.log(style, ...) end end
-  self.logNewest = function() return self.logdisplay:getNewestLine() end
-
-  self.log(self.flash.GOOD, "Welcome to Crisis of the Chrononaut!")
+  --Setup tooltip
+  self.tooltip = Tooltip.new(nil, nil, {255, 255, 255}, {30, 30, 30})
 
   -- Setup inputs
   self:setupCommands()
@@ -81,16 +69,18 @@ function _M:run()
   -- Starting from here we create a new game
   if not self.player then self:newGame() end
 
-  self.hotkeys_display.actor = self.player
-  self.npcs_display.actor = self.player
-
   -- Setup the targetting system
   engine.interface.GameTargeting.init(self)
+
+  self.uiset.hotkeys_display.actor = self.player
+  self.uiset.npcs_display.actor = self.player
 
   -- Ok everything is good to go, activate the game in the engine!
   self:setCurrent()
 
-  if self.level then self:setupDisplayMode() end
+  if self.level then self:setupDisplayMode(false, "postinit") end
+
+  game.log("Welcome to Crisis of the Chrononaut!")
 end
 
 function _M:newGame()
@@ -113,23 +103,50 @@ function _M:newGame()
 end
 
 function _M:loaded()
+  local ui_w, ui_h = core.display.size()
   engine.GameTurnBased.loaded(self)
   Zone:setup{npc_class="mod.class.NPC", grid_class="mod.class.Grid", }
+
+  self.uiset = (require("mod.class.uiset."..(config.settings.cotc.uiset_mode or "cotc"))).new()
+
   Map:setViewerActor(self.player)
-  Map:setViewPort(200, 20, self.w - 200, math.floor(self.h * 0.80) - 20, 32, 32, nil, 22, true)
+  self:setupDisplayMode(false, "init")
+  self:setupDisplayMode(false, "postinit")
+  if self.player then self.player.changed = true end
   self.key = engine.KeyBind.new()
 end
 
 function _M:setupDisplayMode()
-  print("[DISPLAY MODE] 32x32 ASCII/background")
-  Map:setViewPort(200, 20, self.w - 200, math.floor(self.h * 0.80) - 20, 32, 32, nil, 22, true)
-  Map:resetTiles()
-  Map.tiles.use_images = false
+  if not mode or mode == "init" then
+    Map:resetTiles()
+  end
 
-  if self.level then
-    self.level.map:recreate()
-    engine.interface.GameTargeting.init(self)
-    self.level.map:moveViewSurround(self.player.x, self.player.y, 8, 8)
+  if not mode or mode == "postinit" then
+    print("[DISPLAY MODE] 32x32 ASCII/background")
+
+    local tw, th = 32, 32
+    local map_x, map_y, map_w, map_h = self.uiset:getMapSize()
+    local ui_w, ui_h = core.display.size()
+    local pot_th = math.pow(2, math.ceil(math.log(th-0.1) / math.log(2.0)))
+    local fsize = math.floor( pot_th/th*(0.7 * th + 5) )
+    Map:setViewPort(map_x, map_y, map_w, map_h, tw, th, nil, fsize, true)
+    -- Map:setViewPort(sidebar_w, 0, ui_w - sidebar_w, ui_h, 32, 32, nil, 22, true)
+    Map:resetTiles()
+    Map.tiles.use_images = false
+
+    if self.level then
+      self.level.map:recreate()
+      engine.interface.GameTargeting.init(self)
+      self.level.map:moveViewSurround(self.player.x, self.player.y, 8, 8)
+    end
+
+    self:setupMiniMap()
+  end
+end
+
+function _M:setupMiniMap()
+  if self.level and self.level.map and self.level.map.finished then
+    self.uiset:setupMinimap(self.level)
   end
 end
 
@@ -188,6 +205,9 @@ function _M:changeLevel(lev, zone)
     end
     self.portal_queue[self.zone.short_name] = nil
   end
+
+  -- Update the minimap
+  self:setupMiniMap()
 
   -- Allow custom dialogs/actions upon entering the area
   if self.zone.on_enter then
@@ -274,39 +294,38 @@ function _M:onTurn()
   self.level.map:processEffects()
 end
 
-function _M:display(nb_keyframe)
-  -- If switching resolution, blank everything but the dialog
-  if self.change_res_dialog then engine.GameTurnBased.display(self, nb_keyframe) return end
+function _M:updateFOV()
+  self.player:playerFOV()
+end
 
+function _M:displayMap(nb_keyframes)
   -- Now the map, if any
   if self.level and self.level.map and self.level.map.finished then
-    -- Display the map and compute FOV for the player if needed
-    if self.level.map.changed then
-      self.player:playerFOV()
-    end
+    local map = self.level.map
+    if map.changed then self:updateFOV() end
 
-    self.level.map:display(nil, nil, nb_keyframe)
+    -- Display the map
+    map:display(nil, nil, nb_keyframes, false, nil)
 
-    -- Display the targetting system if active
-    self.target:display()
-
-    -- And the minimap
-    self.level.map:minimapDisplay(self.w - 200, 20, util.bound(self.player.x - 25, 0, self.level.map.w - 50), util.bound(self.player.y - 25, 0, self.level.map.h - 50), 50, 50, 0.6)
+    -- Display any targeting system
+    if self.target then self.target:display() end
   end
+end
 
-  -- We display the player's interface
-  self.logdisplay:toScreen()
-  if self.show_npc_list then
-    self.npcs_display:toScreen()
-  else
-    self.hotkeys_display:toScreen()
-  end
+
+function _M:display(nb_keyframes)
+  -- If switching resolution, blank everything but the dialog
+  if self.change_res_dialog then engine.GameTurnBased.display(self, nb_keyframes) return end
+
+  -- Now the UI
+  self.uiset:display(nb_keyframes)
+
   if self.player then self.player.changed = false end
+
+  engine.GameTurnBased.display(self, nb_keyframes)
 
   -- Tooltip is displayed over all else
   self:targetDisplayTooltip()
-
-  engine.GameTurnBased.display(self, nb_keyframe)
 end
 
 --- Setup the keybinds
@@ -453,8 +472,7 @@ function _M:setupCommands()
     end,
 
     LOOK_AROUND = function()
-      self.flash:empty(true)
-      self.flash(self.flash.GOOD, "Looking around... (direction keys to select interesting things, shift+direction keys to move freely)")
+      self.log("Looking around... (direction keys to select interesting things, shift+direction keys to move freely)")
       local co = coroutine.create(function() self.player:getTarget{type="hit", no_restrict=true, range=2000} end)
       local ok, err = coroutine.resume(co)
       if not ok and err then print(debug.traceback(co)) error(err) end
@@ -464,7 +482,7 @@ function _M:setupCommands()
 end
 
 function _M:setupMouse(reset)
-  if reset then self.mouse:reset() end
+  if reset == nil or reset then self.mouse:reset() end
   self.mouse:registerZone(Map.display_x, Map.display_y, Map.viewport.width, Map.viewport.height, function(button, mx, my, xrel, yrel, bx, by, event)
     -- Handle targeting
     if self:targetMouse(button, mx, my, xrel, yrel, event) then return end
@@ -472,16 +490,10 @@ function _M:setupMouse(reset)
     -- Handle the mouse movement/scrolling
     self.player:mouseHandleDefault(self.key, self.key == self.normal_key, button, mx, my, xrel, yrel, event)
   end)
-  -- Scroll message log
-  self.mouse:registerZone(self.logdisplay.display_x, self.logdisplay.display_y, self.w, self.h, function(button)
-    if button == "wheelup" then self.logdisplay:scrollUp(1) end
-    if button == "wheeldown" then self.logdisplay:scrollUp(-1) end
-  end, {button=true})
-  -- Use hotkeys with mouse
-  self.mouse:registerZone(self.hotkeys_display.display_x, self.hotkeys_display.display_y, self.w, self.h, function(button, mx, my, xrel, yrel, bx, by, event)
-    self.hotkeys_display:onMouse(button, mx, my, event == "button", function(text) self.tooltip:displayAtMap(nil, nil, self.w, self.h, tostring(text)) end)
-  end)
-  self.mouse:setCurrent()
+
+  self.uiset:setupMouse(self.mouse)
+
+  if not reset then self.mouse:setCurrent() end
 end
 
 --- Ask if we really want to close, if so, save the game first

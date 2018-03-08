@@ -30,5 +30,6 @@ but hostiles from each of these periods can emerge to fight you as well.
 Your mission: enter the portals, find the missing time machine, and
 destroy it before shatters time itself. ]]
 starter = "mod.load"
+no_get_name = true
 show_only_on_cheat = false -- Example modules are not shown to normal players
 background_name = { "ElectroMagneticPulse" }
