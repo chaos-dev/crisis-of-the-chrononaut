@@ -177,6 +177,54 @@ function _M:changeLevel(lev, zone)
   end
   self.level:addEntity(self.player)
 
+  -- Add any missing portals
+  if self.portal_queue and self.portal_queue[self.zone.short_name] then
+    for k, ID in pairs(self.portal_queue[self.zone.short_name]) do
+       local match_ID = self.portals[ID].match
+       local destination = self.portals[ID].zone
+       self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
+    end
+    self.portal_queue[self.zone.short_name] = nil
+  end
+
+  -- Allow custom dialogs/actions upon entering the area
+  if self.zone.on_enter then
+    self.zone.on_enter(lev, old_lev, zone)
+  end
+end
+
+function _M:teleportLevel(lev, zone, portal_ID)
+  print("[PORTAL] Teleporting to ", zone, lev)
+  local old_lev = (self.level and not zone) and self.level.level or -1000
+  if zone then
+    if self.zone then
+      self.zone:leaveLevel(false, lev, old_lev)
+      self.zone:leave()
+    end
+    if type(zone) == "string" then
+      self.zone = Zone.new(zone)
+    else
+      self.zone = zone
+    end
+  end
+  self.zone:getLevel(self, lev, old_lev)
+
+  -- Add any missing portals
+  if self.portal_queue and self.portal_queue[self.zone.short_name] then
+    for k, ID in pairs(self.portal_queue[self.zone.short_name]) do
+       local match_ID = self.portals[ID].match
+       local destination = self.portals[ID].zone
+       self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
+    end
+    self.portal_queue[self.zone.short_name] = nil
+  end
+
+  -- Place the player on the matching portal
+  local match_ID = game.portals[portal_ID].match
+  local tx, ty = game.portals[match_ID].x+1, game.portals[match_ID].y+1
+  self.player:move(tx, ty, true)
+  self.level:addEntity(self.player)
+
   -- Allow custom dialogs/actions upon entering the area
   if self.zone.on_enter then
     self.zone.on_enter(lev, old_lev, zone)
@@ -443,15 +491,85 @@ function _M:saveGame()
   self.log("Saving game...")
 end
 
-function _M:addPortal(zone, level, name)
-    local m = zone:makeEntityByName(level, "terrain", name)
+--[[
+
+When a portal spawns, the portal knows its own information, the ID of
+its match, and the zone of its match.  But the corresponding portal
+can't be spawned yet, since the zone is not active.  So the portal
+just pushes its own ID to a queue.
+
+Then, when the player changes to that level (by stepping on that portal
+or any other portals), the game pulls up that ID. It then goes to make a
+matching portal.  The process is pretty similar except that it already knows
+the ID and the matching ID, and there's no log messages/actions.
+
+So how does the game know where to take a player when they step on a portal?
+First, we change to the corresponding level. That will trigger the
+creation of the matching portal, if necessary.  Then, we use the matching ID
+to look up the x, y coordinates of the matching portal.
+
+]]--
+
+function _M:addPortal(zone, level, short_name)
+    print("[PORTALS] Adding a portal to ", short_name)
+    local m = zone:makeEntityByName(level, "terrain", "PORTAL")
     if m then
+      -- Give the portal its unique ID
+      m.ID = self:getUniqueID()
+      m.change_zone = short_name
+
+      -- Find a place for the portal
       local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
       local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
       if not tx then return end
+
+      -- Set up the portal properties in game
+      if not self.portals then self.portals = {} end
+      local match_ID = self:getUniqueID()
+      self.portals[m.ID] = {
+        match=match_ID, zone=zone.short_name, x=tx, y=ty}
+      if not self.portal_queue then self.portal_queue = {} end
+      if not self.portal_queue[short_name] then self.portal_queue[short_name] = {} end
+      table.insert(self.portal_queue[short_name], m.ID)
+
+      -- Add the portal to the map
       game.zone:addEntity(level, m, "terrain", tx, ty)
       if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
         game.log("You see a flash, and another shimmering portal appears.")
       end
     end
 end
+
+function _M:addMatchingPortal(zone, level, name, ID, match_ID)
+   print("[PORTALS] Adding a matching portal to that leads to ", name)
+   print("          zone: ", zone)
+   print("          level: ", lev)
+    local m = zone:makeEntityByName(level, "terrain", "PORTAL")
+    if m then
+      -- Give the portal its unique ID
+      m.ID = ID
+      m.change_zone = name
+
+      -- Find a place for the portal
+      local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
+      local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+      if not tx then return end
+
+      -- Set up the portal properties in game
+      if not self.portals then self.portals = {} end
+      self.portals[m.ID] = {match=match_ID, zone=zone.short_zone, x=tx, y=ty}
+
+      -- Add the portal to the map
+      game.zone:addEntity(level, m, "terrain", tx, ty)
+    end
+end
+
+function _M:getUniqueID()
+  if not self.IDCount then
+    self.IDCount = 0
+  else
+    self.IDCount = self.IDCount + 1
+  end
+  return self.IDCount
+end
+

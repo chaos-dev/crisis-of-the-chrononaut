@@ -55,7 +55,7 @@ return {
 
   on_turn = function(self)
     if game.turn % 100 == 0 then
-      game:addPortal(game.zone, game.level, "STARTINGROOM_PORTAL")
+      game:addPortal(game.zone, game.level, "startingroom")
     end
   end,
 }

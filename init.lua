@@ -34,4 +34,4 @@ Your mission: enter the portals, find the missing time machine, and
 destroy it before shatters time itself. ]]
 starter = "mod.load"
 show_only_on_cheat = false -- Example modules are not shown to normal players
-background_name = { "DeathStarOrb", "ElectroMagneticPulse", "NewToy" }
+background_name = { "ElectroMagneticPulse" }

@@ -28,7 +28,7 @@ newEntity{
 }
 
 newEntity{
-  define_as = "DINO_PORTAL",
+  define_as = "PORTAL",
   name = "A strange, shimmering portal",
   display = 'O', color_r=255, color_g=0, color_b=255, back_color=colors.DARK_GREY,
   always_remember = true,
@@ -36,20 +36,7 @@ newEntity{
   on_move = function(self, x, y, who)
     -- TODO: Allow portals to move other entities
     if not who.player then return end
-    game:changeLevel(1, "cretaceous", {direct_switch=true})
-  end
-}
-
-newEntity{
-  define_as = "STARTINGROOM_PORTAL",
-  name = "A strange, shimmering portal",
-  display = 'O', color_r=255, color_g=0, color_b=255, back_color=colors.DARK_GREY,
-  always_remember = true,
-  notice = true,
-  on_move = function(self, x, y, who)
-    -- TODO: Allow portals to move other entities
-    if not who.player then return end
-    game:changeLevel(1, "startingroom", {direct_switch=true})
+    game:teleportLevel(1, self.change_zone, self.ID)
   end
 }
 
