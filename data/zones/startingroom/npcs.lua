@@ -23,7 +23,7 @@ newEntity{
   cries = "grunts",
   he = "he",
   display = "I", color=colors.STEEL_BLUE,
-  faction = "friendly",
+  faction = "players",
   unique = true,
   desc = [[The great scientist Dmitri Aion.]],
 
@@ -40,4 +40,5 @@ newEntity{
   },
 
   can_talk = "inventor",
+  no_wander = "true",
 }
