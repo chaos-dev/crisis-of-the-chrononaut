@@ -87,9 +87,15 @@ function _M:playerFOV()
   -- Clean FOV before computing it
   game.level.map:cleanFOV()
   -- Compute both the normal and the lite FOV, using cache
-  self:computeFOV(self.sight or 20, "block_sight", function(x, y, dx, dy, sqdist)
-    game.level.map:apply(x, y, fovdist[sqdist])
-  end, true, false, true)
+  self:computeFOV(self.sight or 20, "block_sight",
+    function(x, y, dx, dy, sqdist)
+      if game.level.map.lights and game.level.map.lights[x] and game.level.map.lights[x][y] then
+        local light = math.max(fovdist[sqdist], game.level.map.lights[x][y])
+        game.level.map:apply(x, y, light)
+      else
+        game.level.map:apply(x, y, fovdist[sqdist])
+      end
+    end, true, false, true)
   self:computeFOV(self.lite, "block_sight", function(x, y, dx, dy, sqdist) game.level.map:applyLite(x, y) end, true, true, true)
 end
 

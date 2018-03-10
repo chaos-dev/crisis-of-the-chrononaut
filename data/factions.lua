@@ -17,4 +17,8 @@
 local Faction = require "engine.Faction"
 
 Faction:add{name="dinosaur", reaction={}}
+Faction:add{name="machine", reaction={}}
+Faction:add{name="boss", reaction={}}
 Faction:setInitialReaction("dinosaur", "players", -100, true)
+Faction:setInitialReaction("dinosaur", "machine", 100, true)
+Faction:setInitialReaction("boss", "players", -100, true)

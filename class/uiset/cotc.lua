@@ -94,12 +94,14 @@ function _M:activate()
 end
 
 function _M:setupMinimap(level)
-    -- level.map._map:setupMiniMapGridSize(4)
+    level.map._map:setupMiniMapGridSize(4)
 end
 
 function _M:getMapSize()
+    -- Pad the display to avoid the werid overlapping bug
+    local padding = 32
     local w, h = core.display.size()
-    return sidebar_w, 0, w - sidebar_w, h
+    return sidebar_w+padding, 0, w-sidebar_w-padding, h
 end
 
 
@@ -118,7 +120,6 @@ function _M:display(nb_keyframes)
     else
         game.minimap_scroll_x, game.minimap_scroll_y = 0, 0
     end
-    print(mmap_size, game.minimap_scroll_x, game.minimap_scroll_y)
     map:minimapDisplay(0, 0, game.minimap_scroll_x, game.minimap_scroll_y, mmap_size, mmap_size, 1)
   end
 

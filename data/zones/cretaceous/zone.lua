@@ -23,13 +23,12 @@ return {
   location = "Unknown",
   level_range = {1, 1},
   max_level = 10,
-  width = 100, height = 100,
+  width = 50, height = 50,
   persistent = "zone",
   all_lited = true,
   generator =  {
     map = {
       class = "engine.generator.map.Forest",
-      edge_entrances = {4, 6},
       sqrt_percent = 50,
       sqrt_percent2 = 50,
       floor = "DINO_GROUND",
@@ -39,7 +38,7 @@ return {
       down = "DOWN",
       door = "DOOR",
       do_ponds = {
-        nb = {4, 8},
+        nb = {2, 4},
         size = {w=25, h=25},
         pond = {{0.6, "DINO_TALLGRASS"}, {0.8, "DINO_TALLGRASS"}},
       },
@@ -48,7 +47,8 @@ return {
     },
     actor = {
       class = "engine.generator.actor.Random",
-      nb_npc = {15, 20},
+      nb_npc = {1, 1},
+      filters = {{type="dinosaur",}},
     },
   },
   levels = { },

@@ -174,8 +174,27 @@ function _M:leaveLevel(level, lev, old_lev)
   end
 end
 
-function _M:changeLevel(lev, zone)
+function _M:changeLevel(lev, zone, teleport, portal_ID)
   local old_lev = (self.level and not zone) and self.level.level or -1000
+
+  -- Store creature info for this zone
+  if game.zone then
+    if not game.monsters then game.monsters = {} end
+    -- Initialize and/or clear any old monster storage
+    game.monsters[game.zone.short_name] = {}
+    -- FIXME: Add levels
+    local entities = game.level.entities
+    for uid, e in pairs(entities) do
+      if not e.player then
+        table.insert(game.monsters[game.zone.short_name], e)
+        print("UID:", uid, "Name:", e.name, "Life:", e.life, "Max Life:", e.max_life)
+      end
+    end
+    local count = 0
+    for _ in pairs(game.monsters[game.zone.short_name]) do count = count + 1 end
+    print("[PORTAL] Copied", count, "entities into the game state for", game.zone.short_name)
+  end
+
   if zone then
     if self.zone then
       self.zone:leaveLevel(false, lev, old_lev)
@@ -189,12 +208,15 @@ function _M:changeLevel(lev, zone)
   end
   self.zone:getLevel(self, lev, old_lev)
 
-  if lev > old_lev then
-    self.player:move(self.level.default_up.x, self.level.default_up.y, true)
-  else
-    self.player:move(self.level.default_down.x, self.level.default_down.y, true)
+  -- Move to the stairs
+  if not teleport then
+    if lev > old_lev then
+      self.player:move(self.level.default_up.x, self.level.default_up.y, true)
+    else
+      self.player:move(self.level.default_down.x, self.level.default_down.y, true)
+    end
+    self.level:addEntity(self.player)
   end
-  self.level:addEntity(self.player)
 
   -- Add any missing portals
   if self.portal_queue and self.portal_queue[self.zone.short_name] then
@@ -204,6 +226,18 @@ function _M:changeLevel(lev, zone)
       self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
     end
     self.portal_queue[self.zone.short_name] = nil
+  end
+
+  -- Move to a matching portal
+  if teleport then
+    print("[PORTAL] Teleporting to ", zone, lev)
+    -- Place the player on the matching portal
+    local match_ID = game.portals[portal_ID].match
+    local tx, ty = game.portals[match_ID].x, game.portals[match_ID].y
+    game.player.traveling = true
+    self.player:move(tx, ty, true)
+    self.level:addEntity(self.player)
+    game.player.traveling = false
   end
 
   -- Update the minimap
@@ -213,45 +247,20 @@ function _M:changeLevel(lev, zone)
   if self.zone.on_enter then
     self.zone.on_enter(lev, old_lev, zone)
   end
-end
 
-function _M:teleportLevel(lev, zone, portal_ID)
-  print("[PORTAL] Teleporting to ", zone, lev)
-  local old_lev = (self.level and not zone) and self.level.level or -1000
-  if zone then
-    if self.zone then
-      self.zone:leaveLevel(false, lev, old_lev)
-      self.zone:leave()
+  -- Make sure the moved entities are properly deleted
+  if game.zone and game.level and game.deleted and game.deleted[game.zone.short_name] then
+    for _, match in pairs(game.deleted[game.zone.short_name]) do
+      local found_match = false
+      for _, e in pairs(game.level.entities) do
+        if e.name == match.name and e.life == match.life and e.max_life == match.max_life then
+          found_match = true
+          game.log("[PORTAL] Removed entity", e.name, "from zone", game.zone.short_name)
+          game.level:removeEntity(e, true)
+          break
+        end
+      end
     end
-    if type(zone) == "string" then
-      self.zone = Zone.new(zone)
-    else
-      self.zone = zone
-    end
-  end
-  self.zone:getLevel(self, lev, old_lev)
-
-  -- Add any missing portals
-  if self.portal_queue and self.portal_queue[self.zone.short_name] then
-    for k, ID in pairs(self.portal_queue[self.zone.short_name]) do
-      local match_ID = self.portals[ID].match
-      local destination = self.portals[ID].zone
-      self:addMatchingPortal(self.zone, self.level, destination, match_ID, ID)
-    end
-    self.portal_queue[self.zone.short_name] = nil
-  end
-
-  -- Place the player on the matching portal
-  local match_ID = game.portals[portal_ID].match
-  local tx, ty = game.portals[match_ID].x, game.portals[match_ID].y
-  game.player.traveling = true
-  self.player:move(tx, ty, true)
-  self.level:addEntity(self.player)
-  game.player.traveling = false
-
-  -- Allow custom dialogs/actions upon entering the area
-  if self.zone.on_enter then
-    self.zone.on_enter(lev, old_lev, zone)
   end
 end
 
@@ -533,7 +542,7 @@ to look up the x, y coordinates of the matching portal.
 ]]--
 
 function _M:addPortal(zone, level, short_name)
-  print("[PORTALS] Adding a portal to ", short_name)
+  print("[PORTALS] Adding a portal to that leads to", short_name)
   local m = zone:makeEntityByName(level, "terrain", "PORTAL")
   if m then
     -- Give the portal its unique ID
@@ -548,7 +557,8 @@ function _M:addPortal(zone, level, short_name)
     -- Set up the portal properties in game
     if not self.portals then self.portals = {} end
     local match_ID = self:getUniqueID()
-    self.portals[m.ID] = {match=match_ID, zone=zone.short_name, x=tx, y=ty}
+    self.portals[m.ID] = {match=match_ID, zone=zone.short_name,
+                          change_zone=short_name, x=tx, y=ty}
     if not self.portal_queue then self.portal_queue = {} end
     if not self.portal_queue[short_name] then self.portal_queue[short_name] = {} end
     table.insert(self.portal_queue[short_name], m.ID)
@@ -562,9 +572,7 @@ function _M:addPortal(zone, level, short_name)
 end
 
 function _M:addMatchingPortal(zone, level, name, ID, match_ID)
-  print("[PORTALS] Adding a matching portal to that leads to ", name)
-  print("          zone: ", zone)
-  print("          level: ", lev)
+  print("[PORTALS] Adding a matching portal to that leads to", name)
   local m = zone:makeEntityByName(level, "terrain", "PORTAL")
   if m then
     -- Give the portal its unique ID
@@ -578,7 +586,8 @@ function _M:addMatchingPortal(zone, level, name, ID, match_ID)
 
     -- Set up the portal properties in game
     if not self.portals then self.portals = {} end
-    self.portals[m.ID] = {match=match_ID, zone=zone.short_zone, x=tx, y=ty}
+    self.portals[m.ID] = {match=match_ID, zone=zone.short_zone,
+                          change_zone=name, x=tx, y=ty}
 
     -- Add the portal to the map
     game.zone:addEntity(level, m, "terrain", tx, ty)

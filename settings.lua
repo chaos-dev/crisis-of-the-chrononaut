@@ -26,9 +26,9 @@ if not config.settings.cotc.uiset_mode then config.settings.cotc.uiset_mode = "c
 config.settings.cotc.fonts = config.settings.cotc.fonts or {}
 config.settings.cotc.fonts.hud = config.settings.cotc.fonts.hud or {}
 config.settings.cotc.fonts.hud.style = config.settings.cotc.fonts.hud.style or "/data/font/DroidSans.ttf"
-config.settings.cotc.fonts.hud.size = config.settings.cotc.fonts.hud.size or 12
+config.settings.cotc.fonts.hud.size = config.settings.cotc.fonts.hud.size or 14
 config.settings.cotc.fonts.tooltip = config.settings.cotc.fonts.tooltip or {}
 config.settings.cotc.fonts.tooltip.style = config.settings.cotc.fonts.tooltip.style or "/data/font/DroidSansMono.ttf"
-config.settings.cotc.fonts.tooltip.size = config.settings.cotc.fonts.tooltip.size or 12
+config.settings.cotc.fonts.tooltip.size = config.settings.cotc.fonts.tooltip.size or 14
 
 print("[COTC] Loaded default settings")

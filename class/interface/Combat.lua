@@ -34,7 +34,10 @@ function _M:bumpInto(target)
   if reaction < 0 then
     return self:attackTarget(target)
   elseif reaction >= 0 then
-    if self.player and target.can_talk then
+    if self.player and target.destructible then
+      -- Used for the final boss
+      return self:attackTarget(target)
+    elseif self.player and target.can_talk then
       local chat = Chat.new(target.can_talk, target, self)
       chat:invoke()
     elseif target.player and self.can_talk then

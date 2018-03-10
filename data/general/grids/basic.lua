@@ -37,7 +37,7 @@ newEntity{
     -- TODO: Allow portals to move other entities
     if not who.player then return end
     if who.traveling then return end
-    game:teleportLevel(1, self.change_zone, self.ID)
+    game:changeLevel(1, self.change_zone, true, self.ID)
   end
 }
 

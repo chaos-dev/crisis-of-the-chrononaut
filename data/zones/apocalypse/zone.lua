@@ -13,9 +13,6 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
---
-
-
 
 return {
   name = "Apocalypse",
@@ -23,7 +20,7 @@ return {
   location = "Unknown",
   level_range = {1, 1},
   max_level = 10,
-  width = 100, height = 100,
+  width = 50, height = 50,
   persistent = "zone",
   all_lited = true,
   generator =  {
@@ -44,9 +41,6 @@ return {
       rooms = false,
     },
     actor = {
-      class = "engine.generator.actor.OnSpots",
-      nb_npc = {0, 0},
-      nb_spots = 5, on_spot_chance = 75
     },
   },
 
@@ -99,21 +93,71 @@ return {
   end,
 
   on_turn = function(self)
-    if not self.portal_count then self.portal_count = 0 end
+    if not self.num_new_portals then self.num_new_portals = 0 end
+    -- Update the portal count once every player turn
     if (game.turn % 10 == 1) then
       local fill_ratio = 1/9
       local map_area = self.width*self.height
       local scaling = 0.5 + game.turn_counter / game.max_turns
       local portals_per_turn = fill_ratio*map_area / game.max_turns * scaling
-      self.portal_count = self.portal_count + portals_per_turn
+      self.num_new_portals = self.num_new_portals + portals_per_turn
     end
-    while self.portal_count > 1 do
+    -- If the number of new portals > 1, then spawn a new portal
+    while self.num_new_portals > 1 do
       if rng.percent(5) then
         game:addPortal(game.zone, game.level, "startingroom")
       else
         game:addPortal(game.zone, game.level, "cretaceous")
       end
-      self.portal_count = self.portal_count - 1
+      self.num_new_portals = self.num_new_portals - 1
+    end
+
+    -- Spawn entites from the portal
+    if (game.turn % 10 == 0) then
+      for _, portal in pairs(game.portals) do
+        if portal.zone == game.zone.short_name and rng.percent(100) then
+          if game.monsters and game.monsters[portal.change_zone] and
+            table.getn(game.monsters[portal.change_zone]) > 0 then
+            local m = rng.table(game.monsters[portal.change_zone])
+            if not m then
+              print("[PORTALS] ERROR! Could not get a random monster from ", portal.change_zone)
+            elseif not m.type then
+              print("[PORTALS] ERROR! Got a weird type for monster from", portal.change_zone)
+              print("          Table contents:")
+              for k, v in pairs(m) do
+                print("          ", k, " : ", v)
+              end
+            else
+              local tx, ty = util.findFreeGrid(portal.x, portal.y, 2, "block_move", {[engine.Map.ACTOR]=true}) 
+              m:move(tx, ty, true)
+              game.level:addEntity(m)
+              if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
+                game.log("You see a "..m.name.." emerge from the nearby rift!")
+              end
+              print("[PORTAL] Added a "..m.name.." to the level.")
+              -- Mark the entity for deletion
+              if not game.deleted then game.deleted = {} end
+              if not game.deleted[portal.change_zone] then
+                game.deleted[portal.change_zone] = {}
+              end
+              table.insert(game.deleted[portal.change_zone],
+                           {name=m.name, life=m.life, max_life=m.max_life})
+              -- Delete the entity from the list of entities on other levels
+              local flag = true
+              for key, entity in pairs(game.monsters[portal.change_zone]) do
+                if entity.uid == m.uid then
+                  game.monsters[portal.change_zone][key] = nil
+                  flag = false
+                  break
+                end
+              end
+              if flag then print("[PORTALS] Error: Could not find entity to delete!") end
+            end
+          else
+            print("[PORTALS] Tried to spawn a creature, but no monster list set up for "..portal.change_zone)
+          end
+        end
+      end
     end
   end,
 }
