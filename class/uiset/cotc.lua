@@ -138,13 +138,13 @@ end
 
 function _M:setupMouse(mouse)
   -- Scroll message log
-  mouse:registerZone(self.logdisplay.display_x, self.logdisplay.display_y, game.w, game.h, function(button)
+  mouse:registerZone(self.logdisplay.display_x, self.logdisplay.display_y, self.logdisplay.w, self.logdisplay.h, function(button)
     if button == "wheelup" then self.logdisplay:scrollUp(1) end
     if button == "wheeldown" then self.logdisplay:scrollUp(-1) end
   end, {button=true})
 
   -- Use hotkeys with mouse
-  mouse:registerZone(self.hotkeys_display.display_x, self.hotkeys_display.display_y, game.w, game.h, function(button, mx, my, xrel, yrel, bx, by, event)
+  mouse:registerZone(self.hotkeys_display.display_x, self.hotkeys_display.display_y, self.hotkeys_display.w, self.hotkeys_display.h, function(button, mx, my, xrel, yrel, bx, by, event)
     self.hotkeys_display:onMouse(button, mx, my, event == "button",
         function(text)
           game.tooltip:displayAtMap(nil, nil, game.w, game.h, tostring(text))

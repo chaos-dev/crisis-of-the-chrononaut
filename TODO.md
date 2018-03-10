@@ -4,7 +4,6 @@ Todo List
 Necessary
 ---------
 
-+ Allow enemies to follow you through portals
 + Generate more levels and enemies
 + Generate losing scenario
 + Create dialogs for the first time seeing each level
