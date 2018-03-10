@@ -114,44 +114,56 @@ return {
 
     -- Spawn entites from the portal
     if (game.turn % 10 == 0) then
-      for _, portal in pairs(game.portals) do
-        if portal.zone == game.zone.short_name and rng.percent(100) then
+      for id, portal in pairs(game.portals) do
+        print(id, portal.zone)
+        if portal.zone == game.zone.short_name then
           if game.monsters and game.monsters[portal.change_zone] and
             table.getn(game.monsters[portal.change_zone]) > 0 then
-            local m = rng.table(game.monsters[portal.change_zone])
-            if not m then
-              print("[PORTALS] ERROR! Could not get a random monster from ", portal.change_zone)
-            elseif not m.type then
-              print("[PORTALS] ERROR! Got a weird type for monster from", portal.change_zone)
-              print("          Table contents:")
-              for k, v in pairs(m) do
-                print("          ", k, " : ", v)
-              end
-            else
-              local tx, ty = util.findFreeGrid(portal.x, portal.y, 2, "block_move", {[engine.Map.ACTOR]=true}) 
-              m:move(tx, ty, true)
-              game.level:addEntity(m)
-              if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
-                game.log("You see a "..m.name.." emerge from the nearby rift!")
-              end
-              print("[PORTAL] Added a "..m.name.." to the level.")
-              -- Mark the entity for deletion
-              if not game.deleted then game.deleted = {} end
-              if not game.deleted[portal.change_zone] then
-                game.deleted[portal.change_zone] = {}
-              end
-              table.insert(game.deleted[portal.change_zone],
-                           {name=m.name, life=m.life, max_life=m.max_life})
-              -- Delete the entity from the list of entities on other levels
-              local flag = true
-              for key, entity in pairs(game.monsters[portal.change_zone]) do
-                if entity.uid == m.uid then
-                  game.monsters[portal.change_zone][key] = nil
-                  flag = false
-                  break
+            -- Spawn any entities that are following the player
+            if portal.x == game.portal_last_used.x and
+               portal.y == game.portal_last_used.y and
+               portal.change_zone == game.portal_last_used.change_zone then
+              for _, m in pairs(game.monsters[portal.change_zone]) do
+                if m.following then
+                  if m.follow_dist <= 1 then
+                    print("[PORTAL] Last used portal at "..game.portal_last_used.x..", "..game.portal_last_used.y)
+                    print("[PORTAL] Player now at       "..game.player.x..", "..game.player.y)
+                    if game:placeAtPortal(portal, m, true) then
+                      game:markForDeletion(portal, m)
+                    end
+                  else
+                    -- We assume a speed equal to the players
+                    m.follow_dist = m.follow_dist - 1
+                    print("[PORTAL] Following distance is now "..m.follow_dist)
+                  end
                 end
               end
-              if flag then print("[PORTALS] Error: Could not find entity to delete!") end
+            end
+
+            -- Spawn any other monsters
+            for _, m in pairs(game.monsters[portal.change_zone]) do
+              local m = rng.table(game.monsters[portal.change_zone])
+              -- Don't pull in entities that are following the player
+              local tries = 0
+              while tries < 10 and m.following do
+                m = rng.table(game.monsters[portal.change_zone])
+                tries = tries + 1
+              end
+              if tries >= 10 then
+                print("[PORTALS] Could not find a monster that was not following you.")
+              elseif not m and tries < 10 then
+                print("[PORTALS] ERROR! Could not get a random monster from ", portal.change_zone)
+              elseif not m.type then
+                print("[PORTALS] ERROR! Got a weird type for monster from", portal.change_zone)
+                print("          Table contents:")
+                for k, v in pairs(m) do
+                  print("          ", k, " : ", v)
+                end
+              else
+                if game:placeAtPortal(portal, m, false) then
+                  game:markForDeletion(portal, m)
+                end
+              end
             end
           else
             print("[PORTALS] Tried to spawn a creature, but no monster list set up for "..portal.change_zone)

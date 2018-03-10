@@ -174,18 +174,30 @@ function _M:leaveLevel(level, lev, old_lev)
   end
 end
 
+function _M:isTargetingPlayer(entity)
+  local dist = math.sqrt((entity.x - game.player.x)^2 + (entity.y - game.player.y)^2) 
+  return entity.ai_target and entity.ai_target.actor and
+         entity.ai_target.actor.player and
+         game.player:canSee(entity) and
+         (game.player:hasLOS(entity.x, entity.y) or dist < 4)
+end
+
 function _M:changeLevel(lev, zone, teleport, portal_ID)
   local old_lev = (self.level and not zone) and self.level.level or -1000
 
   -- Store creature info for this zone
-  if game.zone then
+  if game.zone and game.level then
     if not game.monsters then game.monsters = {} end
     -- Initialize and/or clear any old monster storage
     game.monsters[game.zone.short_name] = {}
     -- FIXME: Add levels
-    local entities = game.level.entities
-    for uid, e in pairs(entities) do
+    for uid, e in pairs(game.level.entities) do
       if not e.player then
+        if self:isTargetingPlayer(e) then
+          e.following = true
+          e.follow_dist = math.sqrt((e.x - game.player.x)^2 + (e.y - game.player.y)^2)
+          print("[PORTAL] Following distance set to "..e.follow_dist)
+        end
         table.insert(game.monsters[game.zone.short_name], e)
         print("UID:", uid, "Name:", e.name, "Life:", e.life, "Max Life:", e.max_life)
       end
@@ -238,6 +250,7 @@ function _M:changeLevel(lev, zone, teleport, portal_ID)
     self.player:move(tx, ty, true)
     self.level:addEntity(self.player)
     game.player.traveling = false
+    game.portal_last_used = table.clone(game.portals[match_ID])
   end
 
   -- Update the minimap
@@ -586,7 +599,7 @@ function _M:addMatchingPortal(zone, level, name, ID, match_ID)
 
     -- Set up the portal properties in game
     if not self.portals then self.portals = {} end
-    self.portals[m.ID] = {match=match_ID, zone=zone.short_zone,
+    self.portals[m.ID] = {match=match_ID, zone=zone.short_name,
                           change_zone=name, x=tx, y=ty}
 
     -- Add the portal to the map
@@ -601,4 +614,45 @@ function _M:getUniqueID()
     self.IDCount = self.IDCount + 1
   end
   return self.IDCount
+end
+
+function _M:placeAtPortal(portal, m, following)
+  local tx, ty = util.findFreeGrid(portal.x, portal.y, 2, "block_move", {[engine.Map.ACTOR]=true}) 
+  if not tx then
+    print("[PORTAL] Could not place monster. No available space.")
+    return false
+  else
+    m:move(tx, ty, true)
+    game.level:addEntity(m)
+    if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
+      if not following then
+        game.log("You see a "..m.name.." emerge from a nearby rift!")
+      else
+        game.log("You see a "..m.name.." follow you through the nearby rift!")
+      end
+    end
+    print("[PORTAL] Added a "..m.name.." to the level.")
+    return true
+  end
+end
+
+function _M:markForDeletion(portal, m)
+  -- Mark the entity for deletion
+  if not game.deleted then game.deleted = {} end
+  if not game.deleted[portal.change_zone] then
+    game.deleted[portal.change_zone] = {}
+  end
+  table.insert(game.deleted[portal.change_zone],
+  {name=m.name, life=m.life, max_life=m.max_life})
+
+  -- Delete the entity from the list of entities on other levels
+  local flag = true
+  for key, entity in pairs(game.monsters[portal.change_zone]) do
+    if entity.uid == m.uid then
+      game.monsters[portal.change_zone][key] = nil
+      flag = false
+      break
+    end
+  end
+  if flag then print("[PORTALS] Error: Could not find entity to delete!") end
 end
