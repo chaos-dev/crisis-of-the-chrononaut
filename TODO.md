@@ -4,12 +4,9 @@ Todo List
 Necessary
 ---------
 
-+ Generate more levels and enemies
 + Create dialogs for the first time seeing each level
-+ Give proper licensing credit
 + Create help dialogs/manual
 + Balance combat
-+ Make the chance of enemies spawning match enemy to area ratio
 + Get fur armor drops working for cavemen
 
 Desired List
