@@ -22,7 +22,7 @@ local DamageType = require "engine.DamageType"
 local Map = require "engine.Map"
 local Target = require "engine.Target"
 local Talents = require "engine.interface.ActorTalents"
-local Chat = require "engine.Chat"
+local Chat = require "engine.Chat" 
 
 --- Interface to add ToME combat system
 module(..., package.seeall, class.make)
@@ -57,8 +57,19 @@ end
 --- Makes the death happen!
 function _M:attackTarget(target, mult)
   if self.combat then
-    local dam = self.combat.dam + self:getStr() - target.combat_armor
-    DamageType:get(DamageType.PHYSICAL).projector(self, target.x, target.y, DamageType.PHYSICAL, math.max(0, dam))
+    local str_bonus = math.floor(self:getStr()-10)/2
+    local target_str_bonus = math.floor(target:getStr()-10)/2
+    local attack_roll = rng.dice(1,20) + str_bonus
+    if attack_roll > 10 + target_str_bonus then
+      local dam = self.combat.dam + str_bonus - target.combat_armor
+      DamageType:get(DamageType.PHYSICAL).projector(self, target.x, target.y, DamageType.PHYSICAL, math.max(0, dam))
+    else
+      if target == game.player then
+        game.log("The %s misses you.", self.name)
+      elseif self == game.player then
+        game.log("You miss the %s.", target.name)
+      end
+    end
   end
 
   -- We use up our own energy

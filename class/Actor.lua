@@ -13,9 +13,6 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
---
-
-
 
 require "engine.class"
 require "engine.Actor"
@@ -29,10 +26,13 @@ require "engine.interface.ActorTalents"
 require "engine.interface.ActorResource"
 require "engine.interface.ActorFOV"
 require "mod.class.interface.Combat"
+require "engine.interface.ActorInventory"
+require "mod.class.interface.BloodyDeath"
 local Map = require "engine.Map"
 
 module(..., package.seeall, class.inherit(
 engine.Actor,
+engine.interface.ActorInventory,
 engine.interface.ActorTemporaryEffects,
 engine.interface.ActorLife,
 engine.interface.ActorProject,
@@ -41,7 +41,8 @@ engine.interface.ActorStats,
 engine.interface.ActorTalents,
 engine.interface.ActorResource,
 engine.interface.ActorFOV,
-mod.class.interface.Combat
+mod.class.interface.Combat,
+mod.class.interface.BloodyDeath
 ))
 
 function _M:init(t, no_default)
@@ -55,6 +56,11 @@ function _M:init(t, no_default)
   -- Default melee barehanded damage
   self.combat = { dam=1 }
 
+  --Cosmetic
+  t.has_blood = {}
+  t.has_blood.color = colors.RED
+  t.blood_color = t.blood_color or colors.RED
+
   engine.Actor.init(self, t, no_default)
   engine.interface.ActorTemporaryEffects.init(self, t)
   engine.interface.ActorLife.init(self, t)
@@ -64,6 +70,7 @@ function _M:init(t, no_default)
   engine.interface.ActorStats.init(self, t)
   engine.interface.ActorLevel.init(self, t)
   engine.interface.ActorFOV.init(self, t)
+  engine.interface.ActorInventory.init(self, t)
 end
 
 function _M:act()
@@ -100,15 +107,13 @@ function _M:tooltip()
   return ([[%s%s
   #00ffff#Level: %d
   #ff0000#HP: %d (%d%%)
-  Stats: %d /  %d / %d
+  Str: %s
   %s]]):format(
   self:getDisplayString(),
   self.name,
   self.level,
   self.life, self.life * 100 / self.max_life,
   self:getStr(),
-  self:getDex(),
-  self:getCon(),
   self.desc or ""
   )
 end
@@ -118,20 +123,69 @@ function _M:onTakeHit(value, src)
 end
 
 function _M:die(src)
-  engine.interface.ActorLife.die(self, src)
 
   -- Gives the killer some exp for the kill
   if src and src.gainExp then
     src:gainExp(self:worthExp(src))
   end
 
+  -- Do we get a blooooooody death ?
+  -- FIXME: Not working...
+  if rng.percent(100) then
+    -- self:bloodyDeath(false)
+  end
+
+  -- Drop stuff
+  local dropx, dropy = self.x, self.y
+  if game.level.map:checkAllEntities(dropx, dropy, 'block_move') then
+    -- If our grid isn't suitable, find one nearby.
+    local cands = {}
+    for cx = self.x - 3, self.x + 3 do
+      for cy = self.y - 3, self.y + 3 do
+        local d = core.fov.distance(self.x, self.y, cx, cy)
+        if game.level.map:isBound(cx, cy) and d <= 3 and not game.level.map:checkAllEntities(cx, cy, 'block_move') then
+          cands[#cands+1] = {cx, cy, d}
+        end
+      end
+    end
+    if #cands > 0 then
+      -- Pick nearby spots with higher probability.
+      -- [Does this even work, though?]
+      table.sort(cands, function(a, b) return a[3] < b[3] end)
+      local cand = rng.table(cands)
+      dropx, dropy = cand[1], cand[2]
+    end
+  end
+
+  print("[DROPS] Found a spot to drop items at "..dropx..dropy)
+  print("[DROPS] Entity has "..#self.inven.." inventory slots.")
+
+  local invens = {}
+  for id, inven in pairs(self.inven) do
+    invens[#invens+1] = inven
+  end
+  -- [Not sure why we're sorting these; I'm following T4's Actor:die()]
+  for id, inven in pairs(invens) do
+    for i = #inven, 1, -1 do
+      print("[DROPS] Checking slot "..i)
+      local o = inven[i]
+      print("[DROPS] Found an "..o.name.." in inventory slot "..inven.name)
+      self:removeObject(inven, i, true)
+      game.level.map:addObject(dropx, dropy, o)
+    end
+  end
+  self.inven = {}
+
+  engine.interface.ActorLife.die(self, src)
+
   return true
 end
 
 function _M:levelup()
-  self.max_life = self.max_life + 2
+  self.max_life = self.max_life + 5
 
   self:incMaxPower(3)
+  if self.stats and self.stats.str then self.stats.str = self.stats.str + 1 end
 
   -- Heal upon new level
   self.life = self.max_life
@@ -240,10 +294,7 @@ end
 function _M:worthExp(target)
   if not target.level or self.level < target.level - 3 then return 0 end
 
-  local mult = 2
-  if self.unique then mult = 6
-  elseif self.egoed then mult = 3 end
-  return self.level * mult * self.exp_worth
+  return self.exp_worth
 end
 
 --- Can the actor see the target actor

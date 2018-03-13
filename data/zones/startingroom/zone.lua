@@ -55,7 +55,7 @@ return {
   end,
   on_turn = function(self)
     if game.turn % 100 == 10 then
-      game:addPortal(game.zone, game.level, "cretaceous")
+      game:addPortal(game.zone, game.level, "ice")
     end
   end,
 }

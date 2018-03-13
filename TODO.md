@@ -5,12 +5,12 @@ Necessary
 ---------
 
 + Generate more levels and enemies
-+ Generate losing scenario
 + Create dialogs for the first time seeing each level
 + Give proper licensing credit
 + Create help dialogs/manual
-+ Fix tooltip bug
 + Balance combat
++ Make the chance of enemies spawning match enemy to area ratio
++ Get fur armor drops working for cavemen
 
 Desired List
 ------------
@@ -21,6 +21,8 @@ Desired List
 + Create final room (back at home)
 + Change dialogs to be graduate student / professor
 + Create better level/era dialogs in HUD
++ Add separators to HUD (see death dialog)
++ Make a unified color scheme for the HUD
 
 Wish List
 ---------

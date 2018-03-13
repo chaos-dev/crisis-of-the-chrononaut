@@ -23,19 +23,20 @@ newEntity{
   display = "M",
   color = colors.LAVA_BLUE, color_bg=colors.LAVA_ROCK,
   ai = "none",
-  stats = { str=5, dex=5, con=5 },
+  stats = { str=5 },
   combat_armor = 4,
   level_range = {1, 1}, exp_worth = 1,
   rarity = 1,
   max_life = 50,
   combat = { dam=0 },
+  combat_armor = 1,
   faction = "machine",
   destructible = true,
 
   on_die = function()
     -- You've won the game!
     game.player.winner = true
-    game:registerDialog(require("mod.dialogs.WinScreen").new(game.player))
+    game:registerDialog(require("mod.dialogs.WinDialog").new(game.player))
   end,
 }
 
@@ -47,12 +48,12 @@ newEntity{
   display = "I",
   color = colors.LAVA_DARKESTBLUE, color_bg=colors.LAVA_ROCK,
   ai = "dumb_talented_simple",
-  stats = { str=5, dex=5, con=5 },
-  combat_armor = 4,
+  stats = { str=22 },
+  combat_armor = 6,
   level_range = {1, 1}, exp_worth = 1,
   rarity = 1,
-  max_life = 50,
-  combat = { dam=5 },
+  max_life = 100,
+  combat = { dam=10 },
   on_die = function()
     game.log("The interloper lets out a bone-chilling shriek as its body melts away into shadow.")
   end,

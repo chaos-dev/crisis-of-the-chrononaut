@@ -13,6 +13,24 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
---
 
+newEntity{
+    define_as = "BASE_SPEAR",
+    slot = "WEAPON",
+    type = "weapon", subtype="spear",
+    display = "/", color=colors.BROWN,
+    encumber = 3,
+    rarity = 5,
+    combat = {},
+    name = "a generic spear",
+    desc = [[A spear from ice age times.]],
+}
 
+newEntity{ base = "BASE_SPEAR",
+    name = "crude spear",
+    level_range = {1, 10},
+    cost = 5,
+    combat = {
+        dam = 10,
+    },
+}

@@ -25,6 +25,7 @@ local ActorLevel = require "engine.interface.ActorLevel"
 local ActorTemporaryEffects = require "engine.interface.ActorTemporaryEffects"
 local Birther = require "engine.Birther"
 local UIBase = require "engine.ui.Base"
+local ActorInventory = require "engine.interface.ActorInventory"
 
 dofile('/data/colors.lua')
 
@@ -33,6 +34,9 @@ dofile("/mod/settings.lua")
 
 -- Useful keybinds
 KeyBind:load("move,hotkeys,inventory,actions,interface,debug")
+
+-- Additional entity resolvers
+dofile("/mod/resolvers.lua")
 
 -- Damage types
 DamageType:loadDefinition("/data/damage_types.lua")
@@ -47,9 +51,7 @@ ActorTemporaryEffects:loadDefinition("/data/timed_effects.lua")
 ActorResource:defineResource("Power", "power", nil, "power_regen", "Power represent your ability to use special talents.")
 
 -- Actor stats
-ActorStats:defineStat("Strength",	"str", 10, 1, 100, "Strength defines your character's ability to apply physical force. It increases your melee damage, damage with heavy weapons, your chance to resist physical effects, and carrying capacity.")
-ActorStats:defineStat("Dexterity",	"dex", 10, 1, 100, "Dexterity defines your character's ability to be agile and alert. It increases your chance to hit, your ability to avoid attacks and your damage with light weapons.")
-ActorStats:defineStat("Constitution",	"con", 10, 1, 100, "Constitution defines your character's ability to withstand and resist damage. It increases your maximum life and physical resistance.")
+ActorStats:defineStat("Strength",	"str", 10, 1, 100, "Strength represets your ability to cause damage.")
 
 -- Actor AIs
 ActorAI:loadDefinition("/engine/ai/")
@@ -59,6 +61,11 @@ dofile('/data/factions.lua')
 
 -- Birther descriptor
 Birther:loadDefinition("/data/birth/descriptors.lua")
+
+-- Equipment slots
+ActorInventory:defineInventory("WEAPON", "Weapon", true, "Weapon used for melee or ranged combat")
+ActorInventory:defineInventory("ARMOR", "Armor", true, "Armor worn to protect the torso.")
+ActorInventory:defineInventory("SHIELD", "Shield", true, "Shields carried in your free hand.")
 
 -- Gui Specification
 UIBase.ui = "simple"

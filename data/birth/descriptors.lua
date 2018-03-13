@@ -23,11 +23,13 @@ newBirthDescriptor{
   desc = {
   },
   experience = 1.0,
+  body = { INVEN = 10, WEAPON = 1, ARMOR = 1, SHIELD = 1 },
 
   copy = {
-    max_level = 10,
-    lite = 4,
-    max_life = 25,
+    max_level = 20,
+    lite = 6,
+    max_life = 10,
+    stats = {str = 10},
   },
 }
 

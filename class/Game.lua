@@ -39,7 +39,7 @@ local FlyingText = require "engine.FlyingText"
 local Tooltip = require "engine.Tooltip"
 
 local QuitDialog = require "mod.dialogs.Quit"
-
+local TimesUpDialog = require "mod.dialogs.TimesUpDialog"
 
 module(..., package.seeall, class.inherit(engine.GameTurnBased, engine.interface.GameTargeting))
 
@@ -51,6 +51,7 @@ function _M:init()
 
   -- The max length of game
   self.max_turns = 2000
+  self.message_count = 0
 
   -- Same init as when loaded from a savefile
   self:loaded()
@@ -78,7 +79,7 @@ function _M:run()
   -- Ok everything is good to go, activate the game in the engine!
   self:setCurrent()
 
-  if self.level then self:setupDisplayMode(false, "postinit") end
+  if self.level then self:setupDisplayMode("init") end
 
   game.log("Welcome to Crisis of the Chrononaut!")
 end
@@ -86,7 +87,7 @@ end
 function _M:newGame()
   self.player = Player.new{name=self.player_name, game_ender=true}
   Map:setViewerActor(self.player)
-  self:setupDisplayMode()
+  self:setupDisplayMode("init")
 
   self.creating_player = true
   local birth = Birther.new(nil, self.player, {"base", "role" }, function()
@@ -110,38 +111,30 @@ function _M:loaded()
   self.uiset = (require("mod.class.uiset."..(config.settings.cotc.uiset_mode or "cotc"))).new()
 
   Map:setViewerActor(self.player)
-  self:setupDisplayMode(false, "init")
-  self:setupDisplayMode(false, "postinit")
+  self:setupDisplayMode()
   if self.player then self.player.changed = true end
   self.key = engine.KeyBind.new()
 end
 
-function _M:setupDisplayMode()
-  if not mode or mode == "init" then
-    Map:resetTiles()
-  end
-
-  if not mode or mode == "postinit" then
-    print("[DISPLAY MODE] 32x32 ASCII/background")
-
+function _M:setupDisplayMode(mode)
     local tw, th = 32, 32
     local map_x, map_y, map_w, map_h = self.uiset:getMapSize()
     local ui_w, ui_h = core.display.size()
     local pot_th = math.pow(2, math.ceil(math.log(th-0.1) / math.log(2.0)))
     local fsize = math.floor( pot_th/th*(0.7 * th + 5) )
     Map:setViewPort(map_x, map_y, map_w, map_h, tw, th, nil, fsize, true)
-    -- Map:setViewPort(sidebar_w, 0, ui_w - sidebar_w, ui_h, 32, 32, nil, 22, true)
-    Map:resetTiles()
-    Map.tiles.use_images = false
+    if mode == "init" then
+      Map:resetTiles()
+      Map.tiles.use_images = false
 
-    if self.level then
-      self.level.map:recreate()
-      engine.interface.GameTargeting.init(self)
-      self.level.map:moveViewSurround(self.player.x, self.player.y, 8, 8)
+      if self.level then
+        self.level.map:recreate()
+        engine.interface.GameTargeting.init(self)
+        self.level.map:moveViewSurround(self.player.x, self.player.y, 8, 8)
+      end
+
+      self:setupMiniMap()
     end
-
-    self:setupMiniMap()
-  end
 end
 
 function _M:setupMiniMap()
@@ -151,7 +144,7 @@ function _M:setupMiniMap()
 end
 
 function _M:save()
-  return class.save(self, self:defaultSavedFields{}, true)
+  return class.save(self, self:defaultSavedFields{turn=true, portals=true, monsters=true, turn_counter=true, max_turns=true, portal_queue=true}, true)
 end
 
 function _M:getSaveDescription()
@@ -208,6 +201,9 @@ function _M:changeLevel(lev, zone, teleport, portal_ID)
 
   if zone then
     if self.zone then
+      if self.zone.on_leave then
+        self.zone.on_leave(old_lev, zone)
+      end
       self.zone:leaveLevel(false, lev, old_lev)
       self.zone:leave()
     end
@@ -304,6 +300,32 @@ function _M:onTurn()
   if not self.turn_counter then self.turn_counter = 0 end
   if game.turn % 10 == 0 then
     self.turn_counter = self.turn_counter + 1
+  end
+
+  -- Lose condition
+  if game.turn % 10 == 0 and self.turn_counter > self.max_turns then
+    game.paused = true
+    game:registerDialog(TimesUpDialog.new(self))
+  end
+
+  -- Display warnng messages
+  if game.turn % 10 == 0 then
+    if self.turn_counter > 0.25*self.max_turns and self.message_count < 1 then
+      game.log("The light from these rifts seems to be pulsing and changing color.  You can't be sure, but they seem to be speeding up.")
+      self.message_count = 1
+    elseif self.turn_counter > 0.5*self.max_turns and self.message_count < 2 then
+      game.log("The rifts are appearing faster and faster with each moment. You've got to find that time machine before they spread too far.")
+      self.message_count = 2
+    elseif self.turn_counter > 0.75*self.max_turns and self.message_count < 3 then
+      game.log("As the light from the rifts pulses more rapidly, you hear a slight but ominous whine.")
+      self.message_count = 3
+    elseif self.turn_counter > 0.90*self.max_turns and self.message_count < 4 then
+      game.log("The high pitched whine from the rifts is growing loud now.  You don't seem to have much time left.")
+      self.message_count = 4
+    elseif self.turn_counter > 0.98*self.max_turns and self.message_count < 5 then
+      game.log("The light from the portals is starting to blind you, and the whine is unbearable.  Destruction seems to be moments away.")
+      self.message_count = 5
+    end
   end
 
   --Actually do zone on turn stuff
@@ -503,6 +525,29 @@ function _M:setupCommands()
       local ok, err = coroutine.resume(co)
       if not ok and err then print(debug.traceback(co)) error(err) end
     end,
+
+    PICKUP_FLOOR = function()
+      if self.player.no_inventory_access then return end
+      self.player:playerPickup()
+    end,
+
+    DROP_FLOOR = function()
+      if self.player.no_inventory_access then return end
+      self.player:playerDrop()
+    end,
+    SHOW_INVENTORY = function()
+      if self.player.no_inventory_access then return end
+      local d
+      d = self.player:showEquipInven("Inventory", nil, function(o, inven, item, button, event)
+	if not o then return end
+	local ud = require("mod.dialogs.UseItemDialog").new(event == "button", self.player, o, item, inven, function(_, _, _, stop)
+	  d:generate()
+	  d:generateList()
+	  if stop then self:unregisterDialog(d) end
+	end)
+	self:registerDialog(ud)
+      end)
+    end,
   }
   self.key:setCurrent()
 end
@@ -569,6 +614,11 @@ function _M:addPortal(zone, level, short_name)
     -- Find a place for the portal
     local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
     local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+    local tries = 0
+    while tries < 10 and not game.player:canMove(tx, ty) do
+      tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+      tries = tries + 1
+    end
     if not tx then return end
 
     -- Set up the portal properties in game
@@ -581,6 +631,10 @@ function _M:addPortal(zone, level, short_name)
     table.insert(self.portal_queue[short_name], m.ID)
 
     -- Add the portal to the map
+    local terrain = game.level.map(tx, ty, engine.Map.TERRAIN)
+    m.color_bb =  terrain.color_bb
+    m.color_bg = terrain.color_bg
+    m.color_br = terrain.color_br
     game.zone:addEntity(level, m, "terrain", tx, ty)
     if game.player:canSee(m) and game.player:hasLOS(tx, ty) then
       game.log("You see a flash, and another shimmering portal appears.")
@@ -599,6 +653,11 @@ function _M:addMatchingPortal(zone, level, name, ID, match_ID)
     -- Find a place for the portal
     local x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
     local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+    local tries = 0
+    while tries < 10 and not game.player:canMove(tx, ty) do
+      tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
+      tries = tries + 1
+    end
     if not tx then return end
 
     -- Set up the portal properties in game
@@ -607,6 +666,10 @@ function _M:addMatchingPortal(zone, level, name, ID, match_ID)
                           change_zone=name, x=tx, y=ty}
 
     -- Add the portal to the map
+    local terrain = game.level.map(tx, ty, engine.Map.TERRAIN)
+    m.color_bb =  terrain.color_bb
+    m.color_bg = terrain.color_bg
+    m.color_br = terrain.color_br
     game.zone:addEntity(level, m, "terrain", tx, ty)
   end
 end
@@ -662,6 +725,10 @@ function _M:markForDeletion(portal, m)
 end
 
 function _M:spawnFromPortals()
+      if not game.portals then
+        print("[PORTALS] No portals found in `game.portals.'")
+        return
+      end
       for id, portal in pairs(game.portals) do
         if portal.zone == game.zone.short_name then
           if game.monsters and game.monsters[portal.change_zone] and
@@ -687,12 +754,12 @@ function _M:spawnFromPortals()
             end
 
             -- Spawn any other monsters
-            if rng.percent(2) then
-              for _, m in pairs(game.monsters[portal.change_zone]) do
+            for _, m in pairs(game.monsters[portal.change_zone]) do
+              if rng.percent(2) then
                 local m = rng.table(game.monsters[portal.change_zone])
                 -- Don't pull in entities that are following the player
                 local tries = 0
-                while tries < 10 and m.following do
+                while tries < 10 and (not m or m.following) do
                   m = rng.table(game.monsters[portal.change_zone])
                   tries = tries + 1
                 end
@@ -712,9 +779,9 @@ function _M:spawnFromPortals()
                   end
                 end
               end
-            else
-              print("[PORTALS] Tried to spawn a creature, but no monster list set up for "..portal.change_zone)
             end
+          else
+            print("[PORTALS] Tried to spawn a creature, but no monster list set up for "..portal.change_zone)
           end
         end
       end
