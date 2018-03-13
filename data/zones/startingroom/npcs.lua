@@ -19,18 +19,17 @@ newEntity{
   define_as = "NPC_GUARD",
   type = "human", subtype = "adult",
   name = "The Inventor",
-  display = "I", color=colors.STEEL_BLUE,
+  display = "I", color=colors.LIGHT_GREEN,
   faction = "players",
   unique = true,
   desc = [[The great scientist Dmitri Aion.]],
 
   ai = "dumb_talented_simple", ai_state = { talent_in=3, },
   stats = { str=10 },
-  combat_armor = 2,
+  combat_armor = 0,
   level_range = {1, 4}, exp_worth = 1,
-  max_life = 25,
-  combat = { dam=4 },
-  stamina_cost = 8,
+  max_life = 10,
+  combat = { dam=1 },
 
   body = { INVEN = 10, WEAPON=1, ARMOR=1, SHIELD=1 },
   copy = {

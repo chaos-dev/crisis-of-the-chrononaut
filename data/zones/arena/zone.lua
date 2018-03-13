@@ -16,6 +16,8 @@
 
 return {
   name = "Gladiator Arena",
+  year = "100 AD",
+  location = "Roman Empire",
   level_scheme = "fixed",
   decay = {300, 800},
   max_level = 1,
@@ -45,8 +47,21 @@ return {
     end
   end,
   on_turn = function(self)
-    if game.turn % 100 == 10 then
-      game:addPortal(game.zone, game.level, "cretaceous")
+    if not self.portal_count then self.portal_count = 0 end
+    if (game.turn % 10 == 1) then
+      local fill_ratio = 1/2
+      local map_area = self.width*self.height
+      local scaling = 0.5 + game.turn_counter / game.max_turns
+      local portals_per_turn = fill_ratio*map_area / game.max_turns * scaling
+      self.portal_count = self.portal_count + portals_per_turn
+    end
+    while self.portal_count > 1 do
+      if rng.percent(33) then
+        game:addPortal(game.zone, game.level, "pirate")
+      else
+        game:addPortal(game.zone, game.level, "lava")
+      end
+      self.portal_count = self.portal_count - 1
     end
   end,
 }

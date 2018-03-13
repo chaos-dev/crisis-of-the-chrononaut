@@ -20,7 +20,7 @@ return {
   location = "Unknown",
   level_range = {1, 1},
   max_level = 10,
-  width = 70, height = 70,
+  width = 75, height = 75,
   persistent = "zone",
   all_lited = true,
   generator =  {
@@ -78,7 +78,7 @@ return {
   on_turn = function(self)
     if not self.portal_count then self.portal_count = 0 end
     if (game.turn % 10 == 1) then
-      local fill_ratio = 1/9
+      local fill_ratio = 1/4
       local map_area = self.width*self.height
       local scaling = 0.5 + game.turn_counter / game.max_turns
       local portals_per_turn = fill_ratio*map_area / game.max_turns * scaling
@@ -88,7 +88,7 @@ return {
       if rng.percent(5) then
         game:addPortal(game.zone, game.level, "startingroom")
       elseif rng.percent(50) then
-        game:addPortal(game.zone, game.level, "arena")
+        game:addPortal(game.zone, game.level, "apocalypse")
       else
         game:addPortal(game.zone, game.level, "cretaceous")
       end

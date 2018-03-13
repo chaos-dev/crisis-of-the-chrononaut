@@ -18,8 +18,8 @@ name = "Crisis of the Chrononaut"
 long_name = "Crisis of the Chrononaut"
 short_name = "cotc"
 author = { "Chaos-Dev", "" }
-homepage = ""
-version = {1,5,5}
+homepage = "https://chaosdev.itch.io/"
+version = {0,1,0}
 engine = {1,5,5,"te4"}
 description = [[ You're an apprentice to a genius inventor. Suddenly, the
 time machine he's working on goes beserk, then disappears. It seems the

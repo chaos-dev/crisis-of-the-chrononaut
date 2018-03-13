@@ -120,15 +120,12 @@ function _M:display()
   self.items = {}
 
   local h = 6
-  local x = 2
+  local x = 3
 
   self.font:setStyle("bold")
-  self:makeTexture(("%s#{normal}#"):format(player.name), 0, h, colors.GOLD.r, colors.GOLD.g, colors.GOLD.b, self.w) h = h + self.font_h
+  self:makeTexture(("%s#{normal}#        Level: %2d"):format(player.name, player.level), x, h, 255, 255, 255, self.w) h = h + self.font_h
   self.font:setStyle("normal")
 
-  h = h + self.font_h
-
-  self:makeTexture(("Lvl: #GOLD#%2d"):format(player.level), x, h, 255, 255, 255) h = h + self.font_h
   local cur_exp, max_exp = player.exp, player:getExpChart(player.level+1)
   local exp = cur_exp / max_exp * 100
 
@@ -151,18 +148,21 @@ function _M:display()
     h = h + self.font_h
   end
 
-  h = h + self.font_h
 
   --inform the player it's a worldmap
+  h = h + self.font_h
   self:makeTexture(("%s"):format(game.zone.name), x, h, 240, 240, 170)
-  if game.zone.max_level > 1 and game.level.level then
-    h = h + self.font_h
-    self:makeTexture(("dungeon lvl: %d"):format(math.floor(game.level.level)), x, h, 240, 240, 170)
+  h = h + self.font_h
+  if game.zone.year then
+    self:makeTexture(("Year: %s"):format(game.zone.year), x, h, 240, 240, 170)
+  h = h + self.font_h
+  end
+  if game.zone.location then
+    self:makeTexture(("Location: %s"):format(game.zone.location), x, h, 240, 240, 170)
+  h = h + self.font_h
   end
 
   h = h + self.font_h
-
-  --TO DO: Level feeling note
 
   if savefile_pipe.saving then
     h = h + self.font_h

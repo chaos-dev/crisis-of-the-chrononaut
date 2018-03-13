@@ -34,7 +34,7 @@ function _M:act()
   if not mod.class.Actor.act(self) then return end
 
   -- Compute FOV, if needed
-  self:computeFOV(self.sight or 20)
+  self:computeFOV(self.sight or 30)
 
   -- Let the AI think .... beware of Shub !
   -- If AI did nothing, use energy anyway

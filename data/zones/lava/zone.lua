@@ -22,7 +22,7 @@ return {
   decay = {300, 800},
   level_range = {1, 1},
   max_level = 10,
-  width = 50, height = 50,
+  width = 75, height = 75,
   persistent = "zone",
   generator =  {
     map = {
@@ -32,8 +32,8 @@ return {
       floor = "LAVA_ROCK",
       floor2 = "HOT_ROCK",
       wall = "LAVA",
-      up = "UP",
-      down = "DOWN",
+      up = "LAVA_ROCK",
+      down = "LAVA_ROCK",
       door = "DOOR",
       do_ponds = {
         nb = {8, 10},
@@ -106,10 +106,10 @@ return {
       self.portal_count = self.portal_count + portals_per_turn
     end
     while self.portal_count > 1 do
-      if rng.percent(5) then
-        game:addPortal(game.zone, game.level, "startingroom")
+      if rng.percent(50) then
+        game:addPortal(game.zone, game.level, "pirate")
       else
-        game:addPortal(game.zone, game.level, "apocalypse")
+        game:addPortal(game.zone, game.level, "arena")
       end
       self.portal_count = self.portal_count - 1
     end

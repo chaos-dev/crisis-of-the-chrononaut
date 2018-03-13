@@ -33,7 +33,7 @@ dofile('/data/colors.lua')
 dofile("/mod/settings.lua")
 
 -- Useful keybinds
-KeyBind:load("move,hotkeys,inventory,actions,interface,debug")
+KeyBind:load("move,inventory,actions,interface,debug")
 
 -- Additional entity resolvers
 dofile("/mod/resolvers.lua")

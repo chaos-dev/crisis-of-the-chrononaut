@@ -15,12 +15,12 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 return {
-  name = "Pirates",
+  name = "Pirate Ship",
   year = "About 1700",
   location = "Off the Carolina Coast",
   level_range = {1, 1},
   max_level = 10,
-  width = 50, height = 50,
+  width = 70, height = 70,
   persistent = "zone",
   all_lited = true,
   no_level_connectivity = true,
@@ -53,19 +53,21 @@ return {
   on_turn = function(self)
     if not self.portal_count then self.portal_count = 0 end
     if (game.turn % 10 == 1) then
-      local fill_ratio = 1/9
-      local map_area = self.width*self.height
+      local fill_ratio = 1/2
+      local map_area = 22*9
       local scaling = 0.5 + game.turn_counter / game.max_turns
       local portals_per_turn = fill_ratio*map_area / game.max_turns * scaling
       self.portal_count = self.portal_count + portals_per_turn
     end
     while self.portal_count > 1 do
-      if rng.percent(5) then
-        game:addPortal(game.zone, game.level, "startingroom")
-      elseif rng.percent(50) then
+      if rng.percent(2) then
+        game:addPortal(game.zone, game.level, "cretaceous")
+      elseif rng.percent(2) then
+        game:addPortal(game.zone, game.level, "apocalypse")
+      elseif rng.percent(33) then
         game:addPortal(game.zone, game.level, "arena")
       else
-        game:addPortal(game.zone, game.level, "cretaceous")
+        game:addPortal(game.zone, game.level, "lava")
       end
       self.portal_count = self.portal_count - 1
     end

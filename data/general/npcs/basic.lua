@@ -31,9 +31,9 @@ newEntity{
   level_range = {1, nil}, exp_worth = 3,
   stats = { str=19 },
   rarity = 1,
-  max_life = resolvers.rngavg(20, 48),
-  combat = { dam=10 },
-  faction = "carnivore",
+  max_life = resolvers.rngavg(5, 20),
+  combat = { dam=5 },
+  faction = "dino_carnivore",
   combat_armor = 5,
 }
 
@@ -45,9 +45,9 @@ newEntity{
   level_range = {6, 10}, exp_worth = 1,
   stats = { str=21 },
   rarity = 3,
-  max_life = resolvers.rngavg(51, 107),
-  combat = { dam=13 },
-  faction = "carnivore",
+  max_life = resolvers.rngavg(20, 40),
+  combat = { dam=10 },
+  faction = "dino_carnivore",
   combat_armor = 6,
 }
 
@@ -58,16 +58,16 @@ newEntity{
   display='W', color=colors.RED,
   level_range = {1, nil}, exp_worth = 9,
   rarity = 2,
-  max_life = resolvers.rngavg(140,252),
+  max_life = resolvers.rngavg(40, 60),
   combat_armor = 8,
-  combat = { dam=23 },
+  combat = { dam=10 },
   faction = "herbivore",
 }
 
 newEntity{
   define_as = "BASE_CAVEMAN",
   type="ice_age", subtype="humanoid",
-  display = "@",
+  display = "C",
   ai = "simple",
   stats = { str=12 },
   combat_armor = 0,
@@ -117,7 +117,7 @@ newEntity{
   combat_armor = 2,
   faction = "herbivore",
   max_life = resolvers.rngavg(3, 24),
-  combat = { dam=6 },
+  combat = { dam=3 },
   level_range = {1, nil}, exp_worth = 2,
   rarity = 1,
 }
@@ -130,11 +130,11 @@ newEntity{
   display = 't',
   color=colors.ORANGE,
   ai = "simple",
-  stats = { str = 23 },
+  stats = { str = 14 },
   combat_armor = 3,
-  faction = "carnivore",
-  max_life = resolvers.rngavg(24, 66),
-  combat = { dam=12 },
+  faction = "ice_carnivore",
+  max_life = resolvers.rngavg(10, 15),
+  combat = { dam=3 },
   level_range = {1, nil}, exp_worth = 4,
   rarity = 2,
 }
@@ -147,11 +147,11 @@ newEntity{
   display = 'l',
   color=colors.GOLD,
   ai = "simple",
-  stats = { str = 23 },
+  stats = { str = 14},
   combat_armor = 3,
-  faction = "carnivore",
-  max_life = resolvers.rngavg(24, 66),
-  combat = { dam=12 },
+  faction = "arena_carnivore",
+  max_life = resolvers.rngavg(15, 25),
+  combat = { dam=3 },
   level_range = {1, nil}, exp_worth = 4,
   rarity = 2,
 }
@@ -164,18 +164,19 @@ newEntity{
   combat_armor = 0,
   combat = { dam=1 },
   rarity = 3,
-  body = { INVEN = 40, WEAPON = 1, ARMOR = 1, SHIELD = 1 }
+  body = { INVEN = 40, WEAPON = 1, ARMOR = 1, SHIELD = 1 },
+  faction="pirates",
 }
 
 newEntity{
   base = "BASE_PIRATE",
   define_as = "PIRATE",
   name = "Pirate",
-  display = 'P',
+  display = 'p',
   desc = "A greasy looking pirate.",
   level_range = {1, nil}, exp_worth = 1,
   stats = { str=12 },
-  max_life = resolvers.rngavg(6, 27),
+  max_life = resolvers.rngavg(6, 15),
   resolvers.equip{
     {type="weapon", subtype="sword", name = "longsword"},
   },
@@ -186,9 +187,9 @@ newEntity{
   define_as = "CAPTAIN",
   name = "Pirate captain",
   desc = "Judging by his fancy hat, you're guessing this is the captain.",
-  display = 'C',
+  display = 'P',
   level_range = {1, nil}, exp_worth = 3,
-  max_life = resolvers.rngavg(27, 54),
+  max_life = resolvers.rngavg(20, 30),
   stats = { str=18 },
   resolvers.equip{
     {type="weapon", subtype="sword", name = "longsword"},

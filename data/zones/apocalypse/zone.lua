@@ -15,12 +15,12 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 return {
-  name = "Apocalypse",
+  name = "Post-Apocalyptic World",
   year = "Unknown",
   location = "Unknown",
   level_range = {1, 1},
   max_level = 10,
-  width = 50, height = 50,
+  width = 75, height = 75,
   persistent = "zone",
   all_lited = true,
   generator =  {
@@ -34,8 +34,8 @@ return {
       external_floor = "APO_DIRT",
       external_wall = "APO_WALL",
       gate = "APO_GATE",
-      up = "UP",
-      down = "DOWN",
+      up = "APO_FLOOR",
+      down = "APO_FLOOR",
       door = "APO_DOOR",
       nb_rooms = false,
       rooms = false,
@@ -96,7 +96,7 @@ return {
     if not self.num_new_portals then self.num_new_portals = 0 end
     -- Update the portal count once every player turn
     if (game.turn % 10 == 1) then
-      local fill_ratio = 1/9
+      local fill_ratio = 1/4
       local map_area = self.width*self.height
       local scaling = 0.5 + game.turn_counter / game.max_turns
       local portals_per_turn = fill_ratio*map_area / game.max_turns * scaling
@@ -104,10 +104,14 @@ return {
     end
     -- If the number of new portals > 1, then spawn a new portal
     while self.num_new_portals > 1 do
-      if rng.percent(5) then
-        game:addPortal(game.zone, game.level, "startingroom")
-      else
+      if rng.percent(2) then
+        game:addPortal(game.zone, game.level, "ice")
+      elseif rng.percent(25) then
         game:addPortal(game.zone, game.level, "cretaceous")
+      elseif rng.percent(50) then
+        game:addPortal(game.zone, game.level, "arena")
+      else
+        game:addPortal(game.zone, game.level, "pirate")
       end
       self.num_new_portals = self.num_new_portals - 1
     end

@@ -22,6 +22,7 @@ return {
   year = "150 Million Years Ago",
   location = "Unknown",
   level_range = {1, 1},
+  decay = {300, 800},
   max_level = 10,
   width = 100, height = 100,
   persistent = "zone",
@@ -54,17 +55,21 @@ return {
   on_turn = function(self)
     if not self.portal_count then self.portal_count = 0 end
     if (game.turn % 10 == 1) then
-      local fill_ratio = 1/9
+      local fill_ratio = 1/4
       local map_area = self.width*self.height
       local scaling = 0.5 + game.turn_counter / game.max_turns
       local portals_per_turn = fill_ratio*map_area / game.max_turns * scaling
       self.portal_count = self.portal_count + portals_per_turn
     end
     while self.portal_count > 1 do
-      if rng.percent(5) then
-        game:addPortal(game.zone, game.level, "startingroom")
-      else
+      if rng.percent(2) then
+        game:addPortal(game.zone, game.level, "ice")
+      elseif rng.percent(33) then
         game:addPortal(game.zone, game.level, "apocalypse")
+      elseif rng.percent(50) then
+        game:addPortal(game.zone, game.level, "arena")
+      else
+        game:addPortal(game.zone, game.level, "pirate")
       end
       self.portal_count = self.portal_count - 1
     end

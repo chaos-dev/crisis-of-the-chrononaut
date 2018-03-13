@@ -28,8 +28,8 @@ newBirthDescriptor{
   copy = {
     max_level = 20,
     lite = 6,
-    max_life = 10,
-    stats = {str = 10},
+    max_life = 25,
+    stats = {str = 12},
   },
 }
 

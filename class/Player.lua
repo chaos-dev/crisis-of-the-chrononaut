@@ -77,14 +77,14 @@ end
 -- Precompute FOV form, for speed
 local fovdist = {}
 for i = 0, 30 * 30 do
-  fovdist[i] = math.max((20 - math.sqrt(i)) / 14, 0.6)
+  fovdist[i] = math.max((30 - math.sqrt(i)) / 21, 0.8)
 end
 
 function _M:playerFOV()
   -- Clean FOV before computing it
   game.level.map:cleanFOV()
   -- Compute both the normal and the lite FOV, using cache
-  self:computeFOV(self.sight or 20, "block_sight",
+  self:computeFOV(self.sight or 30, "block_sight",
   function(x, y, dx, dy, sqdist)
     if game.level.map.lights and game.level.map.lights[x] and game.level.map.lights[x][y] then
       local light = math.max(fovdist[sqdist], game.level.map.lights[x][y])
@@ -154,7 +154,7 @@ end
 local function spotHostiles(self)
   local seen = false
   -- Check for visible monsters, only see LOS actors, so telepathy wont prevent resting
-  core.fov.calc_circle(self.x, self.y, game.level.map.w, game.level.map.h, 20, function(_, x, y) return game.level.map:opaque(x, y) end, function(_, x, y)
+  core.fov.calc_circle(self.x, self.y, game.level.map.w, game.level.map.h, 30, function(_, x, y) return game.level.map:opaque(x, y) end, function(_, x, y)
   local actor = game.level.map(x, y, game.level.map.ACTOR)
   if actor and self:reactionToward(actor) < 0 and self:canSee(actor) and game.level.map.seens(x, y) then seen = true end
 end, nil)

@@ -73,7 +73,6 @@ function _M:run()
   -- Setup the targetting system
   engine.interface.GameTargeting.init(self)
 
-  self.uiset.hotkeys_display.actor = self.player
   self.uiset.npcs_display.actor = self.player
 
   -- Ok everything is good to go, activate the game in the engine!
@@ -616,6 +615,7 @@ function _M:addPortal(zone, level, short_name)
     local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
     local tries = 0
     while tries < 10 and not game.player:canMove(tx, ty) do
+      x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
       tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
       tries = tries + 1
     end
@@ -655,6 +655,7 @@ function _M:addMatchingPortal(zone, level, name, ID, match_ID)
     local tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
     local tries = 0
     while tries < 10 and not game.player:canMove(tx, ty) do
+      x, y = rng.range(0, level.map.w-1), rng.range(0, level.map.h-1)
       tx, ty = util.findFreeGrid(x, y, 5, false, {[engine.Map.ACTOR]=true})
       tries = tries + 1
     end
@@ -754,8 +755,19 @@ function _M:spawnFromPortals()
             end
 
             -- Spawn any other monsters
+            local zone_area
+            if portal.change_zone == "startingroom" then
+               zone_area = 10*12
+            elseif portal.change_zone == "pirate" then
+               zone_area = 22*9
+            elseif portal.change_zone == "arena" then
+               zone_area = 26*21
+            else
+               zone_area = 75*75*2/3
+            end
+            local spawn_chance = #game.monsters[portal.change_zone]/zone_area
             for _, m in pairs(game.monsters[portal.change_zone]) do
-              if rng.percent(2) then
+              if rng.percent(spawn_chance*100) then
                 local m = rng.table(game.monsters[portal.change_zone])
                 -- Don't pull in entities that are following the player
                 local tries = 0

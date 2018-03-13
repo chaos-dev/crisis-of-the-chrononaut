@@ -18,8 +18,6 @@ require "engine.class"
 local UI = require "engine.ui.Base"
 local UISet = require "mod.class.uiset.UISet"
 local DebugConsole = require "engine.DebugConsole"
-local HotkeysDisplay = require "engine.HotkeysDisplay"
-local HotkeysIconsDisplay = require "engine.HotkeysIconsDisplay"
 local ActorsSeenDisplay = require "engine.ActorsSeenDisplay"
 local PlayerDisplay = require "mod.class.PlayerDisplay"
 local LogDisplay = require "engine.LogDisplay"
@@ -33,10 +31,10 @@ local FontPackage = require "engine.FontPackage"
 
 module(..., package.seeall, class.inherit(UISet))
 
-local mmap_size = 400
-local sidebar_w = mmap_size
-local info_h = 200
-local tool_h = 200
+local mmap_size = 300
+local sidebar_w = 400
+local info_h = 250
+local tool_h = 170
 
 function _M:init()
     UISet.init(self)
@@ -60,15 +58,17 @@ function _M:activate()
   self.init_font_mono = font_mono
   self.init_size_mono = size_mono
   self.init_font_mono_h = font_mono_h
+  self.font_w = f:size(" ")
 
+  local border = self.font_w
+  local actual_sidebar_w = sidebar_w - 2*border
   local ui_w, ui_h = core.display.size()
   local info_y = mmap_size
   local tool_y = info_y + info_h
   local log_y = tool_y + tool_h
-  self.player_display = PlayerDisplay.new(0, info_y, sidebar_w, tool_h, {255, 255, 255}, font_mono, size_mono)
-  self.logdisplay = LogDisplay.new(0, log_y, sidebar_w, ui_h - log_y, nil, font, size, nil, nil)
-  self.hotkeys_display = HotkeysDisplay.new(nil, 0, tool_y, sidebar_w, tool_h, nil, font_mono, size_mono)
-  self.npcs_display = ActorsSeenDisplay.new(nil, 0, tool_y, sidebar_w, tool_h, nil, font_mono, size_mono)
+  self.player_display = PlayerDisplay.new(border, info_y, actual_sidebar_w, tool_h, {255, 255, 255}, font_mono, size_mono)
+  self.logdisplay = LogDisplay.new(border, log_y, sidebar_w-border, ui_h - log_y - border, nil, font, size, nil, nil)
+  self.npcs_display = ActorsSeenDisplay.new(nil, border, tool_y, actual_sidebar_w, tool_h, nil, font_mono, size_mono)
   self.flyers = FlyingText.new()
   game:setFlyingText(self.flyers)
 
@@ -104,8 +104,12 @@ function _M:getMapSize()
     return sidebar_w+padding, 0, w-sidebar_w-padding, h
 end
 
+local _sep_horiz = {core.display.loadImage("/data/gfx/ui/border_vert_middle.png")} _sep_horiz.tex = {_sep_horiz[1]:glTexture()}
+local _sep_vert = {core.display.loadImage("/data/gfx/ui/border_hor_middle.png")} _sep_vert.tex = {_sep_vert[1]:glTexture()}
 
 function _M:displayUI()
+    _sep_vert.tex[1]:toScreenFull(sidebar_w, 0, _sep_vert[2], game.h, _sep_vert.tex[2], _sep_vert.tex[3])
+    _sep_horiz.tex[1]:toScreenFull(0, mmap_size, sidebar_w, _sep_horiz[3], _sep_horiz.tex[2], _sep_horiz.tex[3])
 end
 
 function _M:display(nb_keyframes)
@@ -120,17 +124,13 @@ function _M:display(nb_keyframes)
     else
         game.minimap_scroll_x, game.minimap_scroll_y = 0, 0
     end
-    map:minimapDisplay(0, 0, game.minimap_scroll_x, game.minimap_scroll_y, mmap_size, mmap_size, 1)
+    map:minimapDisplay(50, 0, game.minimap_scroll_x, game.minimap_scroll_y, mmap_size, mmap_size, 1)
   end
 
   -- We display the player's interface
   self.player_display:toScreen(nb_keyframes)
   self.logdisplay:toScreen()
-  if game.show_npc_list then
-    self.npcs_display:toScreen()
-  else
-    self.hotkeys_display:toScreen()
-  end
+  self.npcs_display:toScreen()
 
   -- UI
   self:displayUI()
@@ -142,12 +142,4 @@ function _M:setupMouse(mouse)
     if button == "wheelup" then self.logdisplay:scrollUp(1) end
     if button == "wheeldown" then self.logdisplay:scrollUp(-1) end
   end, {button=true})
-
-  -- Use hotkeys with mouse
-  mouse:registerZone(self.hotkeys_display.display_x, self.hotkeys_display.display_y, self.hotkeys_display.w, self.hotkeys_display.h, function(button, mx, my, xrel, yrel, bx, by, event)
-    self.hotkeys_display:onMouse(button, mx, my, event == "button",
-        function(text)
-          game.tooltip:displayAtMap(nil, nil, game.w, game.h, tostring(text))
-        end)
-  end)
 end

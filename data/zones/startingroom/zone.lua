@@ -22,7 +22,7 @@ return {
   level_scheme = "fixed",
   decay = {300, 800},
   max_level = 1,
-  width = 13, height = 7,
+  width = 12, height = 10,
   persistent = "zone",
   all_lited = true,
   all_remembered = true,
@@ -39,17 +39,21 @@ return {
 
       game.level.shown_warning = true
       Dialog:simpleLongPopup("@", [[
-         You're working as an apprentice to a genius inventor.  He's got some
-         crazy ideas about a "time-machine" that he thinks he'll get working
-         soon.  But one morning, his hand slips, you hear something snap, and...
+         You're a lowly grad student studying under a genius professor.
+         He's got some crazy ideas about a "time-machine" that he thinks he'll
+         get working soon. All you care about is finishing your thesis
+         on plasma instabilities.
+         
+         But one morning, his hand slips, you hear something snap, and...
 
          There's a tremendous BOOM and a flash of light.  When your vision
-         recovers, the machine is nowhere to be found.
+         recovers, the machine he was working on is nowhere to be found.
 
-         "That machine is still running!" shouts the inventor. "If we don't
-         find it and shut it down, it could have cataclysmic effects!"
+         "That time machine is still running!" shouts the professor. 
+         "If we don't find it and shut it down, it could have cataclysmic
+         effects!"
 
-         "You have to find where that time-machine went, and shut it down!"
+         "You have to find where that time-machine went, and stop it!"
          ]], 500)
     end
   end,
